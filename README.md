@@ -29,7 +29,10 @@ bun run build
 # Initialize skset
 bun run dev init
 
-# Add a skill to library
+# Create a new skill
+bun run dev new
+
+# Or add existing skill to library
 bun run dev add ./path/to/skill
 
 # View all skills
@@ -40,6 +43,12 @@ bun run dev validate my-skill
 
 # Push skills to targets
 bun run dev push --all
+
+# Pull skills from targets
+bun run dev pull --all
+
+# Remove a skill
+bun run dev remove my-skill
 ```
 
 ## Commands
@@ -66,6 +75,34 @@ bun run dev add ./my-skill
 
 # The skill must contain a SKILL.md file with valid frontmatter
 ```
+
+### `skset remove <skill>`
+
+Remove a skill from the library.
+
+```bash
+# Remove a skill (with confirmation)
+bun run dev remove my-skill
+
+# Force remove without confirmation
+bun run dev remove my-skill --force
+```
+
+### `skset new [skill]`
+
+Create a new skill from template.
+
+```bash
+# Interactive mode (prompts for name and description)
+bun run dev new
+
+# Create with name directly
+bun run dev new my-new-skill
+```
+
+Creates a skill directory with:
+- `SKILL.md` with frontmatter template
+- `scripts/`, `references/`, `assets/` directories
 
 ### `skset inventory`
 
@@ -122,6 +159,27 @@ bun run dev push --all --dry-run
 
 # Force overwrite without confirmation
 bun run dev push my-skill --force
+```
+
+### `skset pull`
+
+Pull skills from targets into library.
+
+```bash
+# Pull a specific skill from any target
+bun run dev pull my-skill
+
+# Pull from specific target
+bun run dev pull my-skill --target claude-code
+
+# Pull all skills from all global targets
+bun run dev pull --all
+
+# Pull from repo-local directories
+bun run dev pull --all --from-repo
+
+# Force overwrite without confirmation
+bun run dev pull my-skill --force
 ```
 
 ## Configuration

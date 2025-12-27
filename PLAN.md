@@ -662,14 +662,12 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 
 ## Current Status
 
-**MVP Release Ready**: The core functionality is implemented and working. Users can initialize skset, add skills to the library, validate them, view inventory across all locations, and push skills to targets.
+**v1 Feature Complete**: All core functionality is implemented and working. Users have complete CRUD operations for skills plus validation and distribution capabilities.
 
-**Remaining for Full v1**:
-- `skset remove` - Remove skills from library
-- `skset new` - Scaffold new skills
-- `skset pull` - Import skills from targets
+**Remaining for Release**:
 - GitHub Actions release workflow
 - Homebrew Cask formula
+- Testing and bug fixes
 
 ## Development Phases
 
@@ -680,16 +678,16 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 - [x] `skset init` command
 - [x] `skset validate` command
 
-### Phase 2: Library Management ✅ MVP COMPLETE
+### Phase 2: Library Management ✅ COMPLETE
 - [x] `skset add` command
-- [ ] `skset remove` command (deferred - manual file deletion)
-- [ ] `skset new` command (deferred - manual creation)
+- [x] `skset remove` command
+- [x] `skset new` command
 - [x] `skset inventory` (library and full)
 
 ### Phase 3: Distribution ✅ COMPLETE
 - [x] Target path resolution
 - [x] `skset push` command
-- [ ] `skset pull` command (deferred - use `add` with paths)
+- [x] `skset pull` command
 - [x] `skset inventory` (full)
 - [x] Conflict detection
 

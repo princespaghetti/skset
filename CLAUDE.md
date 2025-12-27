@@ -149,16 +149,19 @@ groups:
   core: []
 ```
 
-## MVP Scope
+## v1 Commands
 
-The initial v1 implements core commands only:
+All core CRUD and distribution commands are implemented:
 - `skset init` - Initialize configuration and library
+- `skset new [skill]` - Create new skill from template
 - `skset add <path>` - Add skills to library
+- `skset remove <skill>` - Remove skill from library
+- `skset validate <skill>` - Validate skills against spec
 - `skset inventory` - List skills across all locations
 - `skset push <skill>` - Distribute skills to targets
-- `skset validate <skill>` - Validate skills against spec
+- `skset pull <skill>` - Import skills from targets
 
-Deferred: `new`, `remove`, `pull`, `groups`, `config`, `sync`
+Deferred to future releases: `groups`, `config`, `sync`
 
 ## Technology Stack
 

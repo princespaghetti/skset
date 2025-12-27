@@ -7,9 +7,12 @@
 import { Command } from 'commander';
 import { init } from './commands/init.ts';
 import { add } from './commands/add.ts';
+import { remove } from './commands/remove.ts';
+import { newSkill } from './commands/new.ts';
 import { validate } from './commands/validate.ts';
 import { inventory } from './commands/inventory.ts';
 import { push } from './commands/push.ts';
+import { pull } from './commands/pull.ts';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -45,6 +48,23 @@ program
     await add(path);
   });
 
+// skset remove <skill>
+program
+  .command('remove <skill>')
+  .description('Remove a skill from the library')
+  .option('--force', 'Remove without confirmation')
+  .action(async (skill: string, options) => {
+    await remove(skill, options.force);
+  });
+
+// skset new [skill]
+program
+  .command('new [skill]')
+  .description('Create a new skill from template')
+  .action(async (skill: string | undefined) => {
+    await newSkill(skill);
+  });
+
 // skset validate [skill]
 program
   .command('validate [skill]')
@@ -76,6 +96,18 @@ program
   .option('--force', 'Force overwrite without confirmation')
   .action(async (skill: string | undefined, options) => {
     await push(skill, options);
+  });
+
+// skset pull [skill]
+program
+  .command('pull [skill]')
+  .description('Pull skills from targets into library')
+  .option('--all', 'Pull all skills from target(s)')
+  .option('--target <name>', 'Pull from specific target only')
+  .option('--from-repo', 'Pull from repo-local directories instead of global')
+  .option('--force', 'Force overwrite without confirmation')
+  .action(async (skill: string | undefined, options) => {
+    await pull(skill, options);
   });
 
 // Parse CLI arguments
