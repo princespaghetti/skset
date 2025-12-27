@@ -676,7 +676,7 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 **Next Steps**:
 1. Create first release: `git tag v0.1.0 && git push origin v0.1.0`
 2. Update Cask SHA256 checksums from release artifacts
-3. Users can install via `brew tap princespaghetti/skset && brew install skset`
+3. Users can install via `brew tap princespaghetti/skset https://github.com/princespaghetti/skset && brew install skset`
 
 ## Development Phases
 

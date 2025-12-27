@@ -49,7 +49,7 @@ After the first release, you need to update the SHA256 checksums in `Casks/skset
 Users can install via Homebrew:
 
 ```bash
-brew tap princespaghetti/skset
+brew tap princespaghetti/skset https://github.com/princespaghetti/skset
 brew install skset
 ```
 
