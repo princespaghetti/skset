@@ -555,7 +555,7 @@ jobs:
           - os: macos-latest
             target: bun-darwin-arm64
             artifact: skset-darwin-arm64
-          - os: macos-13
+          - os: macos-15-intel
             target: bun-darwin-x64
             artifact: skset-darwin-x64
           - os: ubuntu-latest
