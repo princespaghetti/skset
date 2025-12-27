@@ -673,9 +673,14 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 - ✅ CI/CD workflows configured
 - ✅ Homebrew Cask formula ready
 
-**Next Steps**:
-1. Create first release: `git tag v0.1.0 && git push origin v0.1.0`
-2. Update Cask SHA256 checksums from release artifacts
+**Creating a Release**:
+1. Create and push tag: `git tag vx.y.z && git push origin vx.y.z`
+2. GitHub Actions automatically:
+   - Runs tests
+   - Builds binaries for 4 platforms
+   - Creates GitHub release
+   - Updates Cask and package.json with version/checksums
+   - Commits changes back to main
 3. Users can install via `brew tap princespaghetti/skset https://github.com/princespaghetti/skset && brew install skset`
 
 ## Development Phases
