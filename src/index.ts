@@ -13,24 +13,14 @@ import { validate } from './commands/validate.ts';
 import { inventory } from './commands/inventory.ts';
 import { push } from './commands/push.ts';
 import { pull } from './commands/pull.ts';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-
-// Get package.json path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const packageJsonPath = join(__dirname, '..', 'package.json');
-
-// Read version from package.json
-const packageJson = await Bun.file(packageJsonPath).json();
-const version = packageJson.version || '0.1.0';
+import pkg from '../package.json' with { type: 'json' };
 
 const program = new Command();
 
 program
   .name('skset')
   .description('LLM Skill Manager CLI for managing agent skills across multiple AI coding tools')
-  .version(version);
+  .version(pkg.version);
 
 // skset init
 program

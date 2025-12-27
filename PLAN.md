@@ -662,18 +662,21 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 
 ## Current Status
 
-**v1 Ready for Release**: All core functionality is implemented, tested, and working. Users have complete CRUD operations for skills plus validation and distribution capabilities.
+**v1 Complete - Ready for First Release**: All core functionality is implemented, tested, and ready for distribution.
 
-**Test Coverage**:
-- ✅ Unit tests for skill parsing and validation
-- ✅ Unit tests for configuration management
-- ✅ Unit tests for path utilities
-- ✅ Integration tests for file operations
+**Implemented**:
+- ✅ Complete CRUD operations for skills
+- ✅ Validation against Agent Skills spec
+- ✅ Bidirectional distribution (push/pull)
+- ✅ Support for 5 AI coding tools
 - ✅ 41 tests passing
+- ✅ CI/CD workflows configured
+- ✅ Homebrew Cask formula ready
 
-**Remaining for Release**:
-- GitHub Actions release workflow
-- Homebrew Cask formula
+**Next Steps**:
+1. Create first release: `git tag v0.1.0 && git push origin v0.1.0`
+2. Update Cask SHA256 checksums from release artifacts
+3. Users can install via `brew tap princespaghetti/skset && brew install skset`
 
 ## Development Phases
 
@@ -705,9 +708,10 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 - [x] Error handling improvements
 - [x] Help text and documentation
 
-### Phase 5: Release 🚧 PARTIAL
+### Phase 5: Release ✅ COMPLETE
 - [x] README with usage examples
-- [ ] GitHub Actions release workflow (binary builds)
-- [ ] Homebrew Cask formula (Casks/skset.rb)
-- [ ] GitHub repository setup
+- [x] GitHub Actions CI workflow (tests on every push/PR)
+- [x] GitHub Actions release workflow (binary builds on tags)
+- [x] Homebrew Cask formula (Casks/skset.rb)
+- [x] GitHub repository setup
 
