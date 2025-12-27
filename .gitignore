@@ -12,10 +12,13 @@ dist/
 .vscode/
 .idea/
 
-# Test files
-*.test.ts
-test/
+# Test coverage
+coverage/
+*.lcov
 
 # Environment
 .env
 .env.*
+
+# Test temp directories
+test-tmp/
