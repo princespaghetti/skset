@@ -1,0 +1,33 @@
+{
+  "name": "skset",
+  "version": "0.1.0",
+  "description": "LLM Skill Manager CLI for managing agent skills across multiple AI coding tools",
+  "type": "module",
+  "bin": {
+    "skset": "./dist/skset"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build ./src/index.ts --compile --outfile dist/skset",
+    "test": "bun test"
+  },
+  "keywords": [
+    "cli",
+    "llm",
+    "agent-skills",
+    "claude-code",
+    "ai-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@clack/prompts": "^0.8.2",
+    "commander": "^12.1.0",
+    "gray-matter": "^4.0.3",
+    "picocolors": "^1.1.1",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

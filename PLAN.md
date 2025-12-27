@@ -14,6 +14,7 @@ Multiple AI coding tools now support the Agent Skills standard, but each uses di
 | OpenCode | `~/.opencode/skill/` | `.opencode/skill/` |
 | Codex | `~/.codex/skills/`, `/etc/codex/skills/` | `.codex/skills/` |
 | VS Code Copilot | — | `.github/skills/` |
+| amp | `~/.config/agents/skills/` | `.agents/skills/` |
 
 Managing skills across these tools requires manual copying and synchronization. `skset` solves this by providing a central library and distribution mechanism.
 
@@ -68,9 +69,13 @@ targets:
   codex:
     global: ~/.codex/skills
     repo: .codex/skills
-    
+
   copilot:
     repo: .github/skills
+
+  amp:
+    global: ~/.config/agents/skills
+    repo: .agents/skills
 
 # Skill groups for batch distribution
 groups:
@@ -330,16 +335,36 @@ skset sync --status
 
 Full bidirectional sync deferred to v2.
 
+## MVP Scope
+
+The initial v1 release focuses on core functionality:
+
+**Included Commands:**
+- `skset init` - Initialize configuration and library
+- `skset add <path>` - Add skills to library
+- `skset inventory` - List skills across all locations
+- `skset push <skill>` - Distribute skills to targets
+- `skset validate <skill>` - Validate skills against Agent Skills spec
+
+**Deferred to Future Releases:**
+- `skset new` - Scaffold new skills (use manual creation for now)
+- `skset remove` - Remove skills from library (use manual file deletion)
+- `skset pull` - Import skills from targets (use `add` with explicit paths)
+- `skset groups` - Group management (manual config.yaml editing)
+- `skset config` - Config editing (manual config.yaml editing)
+- `skset sync` - Bidirectional sync
+
 ## Implementation Details
 
 ### Technology Stack
 - **Runtime:** Bun
 - **Language:** TypeScript
-- **CLI Framework:** Consider `commander`, `yargs`, or `citty` (Bun-native)
+- **CLI Framework:** `commander`
+- **Prompts:** `@clack/prompts` for interactive confirmations
 - **YAML Parsing:** `yaml` package
 - **Markdown Parsing:** `gray-matter` for frontmatter extraction
 - **File Operations:** Bun's native fs APIs
-- **Output Formatting:** `chalk` or `picocolors` for colors, `cli-table3` for tables
+- **Output Formatting:** `picocolors` for colors, `cli-table3` for tables
 
 ### CLI Standards
 
@@ -635,38 +660,49 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 7. Provides actionable warnings for oversized skills
 8. Handles edge cases: missing directories, permission errors, invalid skills
 
+## Current Status
+
+**MVP Release Ready**: The core functionality is implemented and working. Users can initialize skset, add skills to the library, validate them, view inventory across all locations, and push skills to targets.
+
+**Remaining for Full v1**:
+- `skset remove` - Remove skills from library
+- `skset new` - Scaffold new skills
+- `skset pull` - Import skills from targets
+- GitHub Actions release workflow
+- Homebrew Cask formula
+
 ## Development Phases
 
-### Phase 1: Core Infrastructure
-- [ ] Project setup (Bun, TypeScript, CLI framework)
-- [ ] Config file loading/saving
-- [ ] Skill parsing and validation
-- [ ] `skset init` command
-- [ ] `skset validate` command
+### Phase 1: Core Infrastructure ✅ COMPLETE
+- [x] Project setup (Bun, TypeScript, CLI framework)
+- [x] Config file loading/saving
+- [x] Skill parsing and validation
+- [x] `skset init` command
+- [x] `skset validate` command
 
-### Phase 2: Library Management
-- [ ] `skset add` command
-- [ ] `skset remove` command
-- [ ] `skset new` command
-- [ ] `skset inventory` (library only)
+### Phase 2: Library Management ✅ MVP COMPLETE
+- [x] `skset add` command
+- [ ] `skset remove` command (deferred - manual file deletion)
+- [ ] `skset new` command (deferred - manual creation)
+- [x] `skset inventory` (library and full)
 
-### Phase 3: Distribution
-- [ ] Target path resolution
-- [ ] `skset push` command
-- [ ] `skset pull` command
-- [ ] `skset inventory` (full)
-- [ ] Conflict detection
+### Phase 3: Distribution ✅ COMPLETE
+- [x] Target path resolution
+- [x] `skset push` command
+- [ ] `skset pull` command (deferred - use `add` with paths)
+- [x] `skset inventory` (full)
+- [x] Conflict detection
 
-### Phase 4: Groups & Polish
-- [ ] `skset groups` command
-- [ ] `skset config` command
-- [ ] `skset sync` command
-- [ ] Shell completions (bash, zsh, fish)
-- [ ] Error handling improvements
-- [ ] Help text and documentation
+### Phase 4: Groups & Polish 🚧 PARTIAL
+- [ ] `skset groups` command (deferred - manual config.yaml editing)
+- [ ] `skset config` command (deferred - manual config.yaml editing)
+- [ ] `skset sync` command (deferred to v2)
+- [ ] Shell completions (bash, zsh, fish) (future enhancement)
+- [x] Error handling improvements
+- [x] Help text and documentation
 
-### Phase 5: Release
-- [ ] README with usage examples
+### Phase 5: Release 🚧 PARTIAL
+- [x] README with usage examples
 - [ ] GitHub Actions release workflow (binary builds)
 - [ ] Homebrew Cask formula (Casks/skset.rb)
 - [ ] GitHub repository setup
