@@ -1,27 +1,27 @@
 cask "skset" do
-  version "0.2.0"
+  version "0.2.1"
   desc "LLM Skill Manager CLI"
   homepage "https://github.com/princespaghetti/skset"
 
   on_macos do
     on_arm do
       url "https://github.com/princespaghetti/skset/releases/download/v#{version}/skset-darwin-arm64.tar.gz"
-      sha256 "012a0a6436bbd4bfe5687c8282c973c824a2bb1678b656be3adf33dbf53cf295"
+      sha256 "ab9c32bd3bb02e41fd08eba680058dce808887e36f8425b6aab25ed2403e0700"
     end
     on_intel do
       url "https://github.com/princespaghetti/skset/releases/download/v#{version}/skset-darwin-x64.tar.gz"
-      sha256 "a87c8aaeed8557e4c44bc841291808b2c0362330c47a627fa59b8241204b9fce"
+      sha256 "e4159033692a38ea26dae246969f7ee76c93d8030b0ac6631955ffbbbedb2bdf"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/princespaghetti/skset/releases/download/v#{version}/skset-linux-x64.tar.gz"
-      sha256 "9c446d8ae8f6382d2e89e4b0fe873ed332e9e812f5bd68c93db60ad63f175e6d"
+      sha256 "75dc1df2e1bc50d43f87146bc877668c0788ee8c7d96aaf0853eb44943cc5871"
     end
     on_arm do
       url "https://github.com/princespaghetti/skset/releases/download/v#{version}/skset-linux-arm64.tar.gz"
-      sha256 "fc59403d485fce34b7319bb6cbef48acd31549144ac4aedc1a033d8a11913b9f"
+      sha256 "59b8cf5d3cc010f209353f15366957e77bf7d672495f23a68bfc17d900787550"
     end
   end
 
