@@ -35,15 +35,23 @@ export async function parseSkill(
     const content = await readFile(skillPath, 'utf-8');
     const { data } = matter(content);
 
+    // Handle allowed-tools: can be array (YAML format) or string (space-delimited)
+    let allowedTools: string[] | undefined;
+    if (data['allowed-tools']) {
+      if (Array.isArray(data['allowed-tools'])) {
+        allowedTools = data['allowed-tools'] as string[];
+      } else if (typeof data['allowed-tools'] === 'string') {
+        allowedTools = (data['allowed-tools'] as string).split(/\s+/);
+      }
+    }
+
     const skill: Skill = {
       name: data.name as string,
       description: data.description as string,
       license: data.license as string | undefined,
       compatibility: data.compatibility as string | undefined,
       metadata: data.metadata as Record<string, string> | undefined,
-      allowedTools: data['allowed-tools']
-        ? (data['allowed-tools'] as string).split(/\s+/)
-        : undefined,
+      allowedTools,
       path: dirPath,
       source,
       target,
@@ -203,7 +211,7 @@ export async function listSkills(
     }
 
     return skills;
-  } catch {
+  } catch (err) {
     return [];
   }
 }

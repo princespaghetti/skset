@@ -188,7 +188,7 @@ function printSections(sections: InventorySection[], skillToGroupsMap: Map<strin
     console.log(out.bold(section.title));
 
     if (section.skills.length === 0) {
-      console.log(out.dim('  (empty)'));
+      console.log(pc.dim('  (empty)'));
     } else {
       for (const skill of section.skills) {
         const desc = skill.description.length > 60
@@ -198,11 +198,11 @@ function printSections(sections: InventorySection[], skillToGroupsMap: Map<strin
         // Show group membership for library skills
         const groups = skillToGroupsMap.get(skill.name);
         const groupsBadge = groups && groups.length > 0
-          ? ` ${out.dim(`[${groups.join(', ')}]`)}`
+          ? ` ${pc.dim(`[${groups.join(', ')}]`)}`
           : '';
 
         console.log(
-          `  ${pc.green('✓')} ${out.bold(skill.name)}${groupsBadge} ${out.dim('-')} ${desc}`
+          `  ${pc.green('✓')} ${out.bold(skill.name)}${groupsBadge} ${pc.dim('-')} ${desc}`
         );
       }
     }
