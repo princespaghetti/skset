@@ -199,6 +199,17 @@ The project uses a self-hosted Homebrew tap in the same repository (like verifi 
 
 Installation: `brew tap <owner>/skset && brew install skset`
 
+### Important: Pull Before Push
+
+**The release workflow automatically commits Cask updates to main**, so after any release you must pull/rebase before pushing new commits:
+
+```bash
+git pull --rebase  # or git pull --rebase origin main
+git push
+```
+
+If you forget, you'll get a "rejected (fetch first)" error. This is expected behavior - the release workflow has updated `Casks/skset.rb` on the remote.
+
 ## Development Phases (PLAN.md)
 
 1. **Core Infrastructure** ✅: Project setup, config handling, skill validation, `init` & `validate` commands
