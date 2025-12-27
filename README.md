@@ -1,79 +1,61 @@
 # skset - LLM Skill Manager CLI
 
-A Bun-based CLI tool for managing LLM agent skills across multiple AI coding tools (Claude Code, OpenCode, Codex, VS Code Copilot, amp). Provides centralized skill storage and distribution following the [Agent Skills open standard](https://agentskills.io/specification).
+A CLI tool for managing LLM agent skills across multiple AI coding tools (Claude Code, OpenCode, Codex, VS Code Copilot, amp). Provides centralized skill storage and distribution following the [Agent Skills open standard](https://agentskills.io/specification).
 
 ## Installation
 
-### From Source
+Coming soon via Homebrew.
+
+For now, install from source:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/princespaghetti/skset.git
 cd skset
 bun install
-bun run src/index.ts --help
-```
-
-### Development
-
-```bash
-# Run CLI during development
-bun run dev <command>
-
-# Build standalone binary
-bun run build
+bun run dev --help
 ```
 
 ## Quick Start
 
 ```bash
 # Initialize skset
-bun run dev init
+skset init
 
 # Create a new skill
-bun run dev new
-
-# Or add existing skill to library
-bun run dev add ./path/to/skill
+skset new
 
 # View all skills
-bun run dev inventory
-
-# Validate a skill
-bun run dev validate my-skill
+skset inventory
 
 # Push skills to targets
-bun run dev push --all
-
-# Pull skills from targets
-bun run dev pull --all
-
-# Remove a skill
-bun run dev remove my-skill
+skset push --all
 ```
 
 ## Commands
 
 ### `skset init`
 
-Initialize skset configuration and library directory.
+Initialize configuration and library.
 
 ```bash
-bun run dev init
+skset init
 ```
 
-Creates:
-- `~/.skset/config.yaml` - Configuration file
-- `~/.skset/library/` - Central skill storage
+### `skset new [skill]`
+
+Create a new skill from template (interactive or with name).
+
+```bash
+skset new
+skset new my-skill
+```
 
 ### `skset add <path>`
 
-Add a skill to the library.
+Add an existing skill to the library.
 
 ```bash
-# Add from local directory
-bun run dev add ./my-skill
-
-# The skill must contain a SKILL.md file with valid frontmatter
+skset add ./my-skill
 ```
 
 ### `skset remove <skill>`
@@ -81,155 +63,66 @@ bun run dev add ./my-skill
 Remove a skill from the library.
 
 ```bash
-# Remove a skill (with confirmation)
-bun run dev remove my-skill
-
-# Force remove without confirmation
-bun run dev remove my-skill --force
+skset remove my-skill
+skset remove my-skill --force
 ```
 
-### `skset new [skill]`
+### `skset validate [skill]`
 
-Create a new skill from template.
+Validate skills against the [Agent Skills specification](https://agentskills.io/specification).
 
 ```bash
-# Interactive mode (prompts for name and description)
-bun run dev new
-
-# Create with name directly
-bun run dev new my-new-skill
+skset validate my-skill
+skset validate --all
 ```
-
-Creates a skill directory with:
-- `SKILL.md` with frontmatter template
-- `scripts/`, `references/`, `assets/` directories
 
 ### `skset inventory`
 
 List all skills across library and targets.
 
 ```bash
-# List all skills everywhere
-bun run dev inventory
-
-# List library skills only
-bun run dev inventory --library
-
-# List specific target only
-bun run dev inventory --target claude-code
-
-# Output as JSON
-bun run dev inventory --json
+skset inventory
+skset inventory --library
+skset inventory --target claude-code
+skset inventory --json
 ```
 
-### `skset validate`
+### `skset push [skill]`
 
-Validate skills against the Agent Skills specification.
+Distribute skills from library to targets.
 
 ```bash
-# Validate a specific skill in library
-bun run dev validate my-skill
-
-# Validate a local directory
-bun run dev validate ./path/to/skill
-
-# Validate all library skills
-bun run dev validate --all
+skset push my-skill
+skset push --all
+skset push my-skill --target claude-code
+skset push my-skill --repo
+skset push --all --dry-run
 ```
 
-### `skset push`
+### `skset pull [skill]`
 
-Push skills from library to targets.
-
-```bash
-# Push a single skill to all global targets
-bun run dev push my-skill
-
-# Push to specific target
-bun run dev push my-skill --target claude-code
-
-# Push to repo-local directories
-bun run dev push my-skill --repo
-
-# Push all library skills
-bun run dev push --all
-
-# Dry run - show what would happen
-bun run dev push --all --dry-run
-
-# Force overwrite without confirmation
-bun run dev push my-skill --force
-```
-
-### `skset pull`
-
-Pull skills from targets into library.
+Import skills from targets into library.
 
 ```bash
-# Pull a specific skill from any target
-bun run dev pull my-skill
-
-# Pull from specific target
-bun run dev pull my-skill --target claude-code
-
-# Pull all skills from all global targets
-bun run dev pull --all
-
-# Pull from repo-local directories
-bun run dev pull --all --from-repo
-
-# Force overwrite without confirmation
-bun run dev pull my-skill --force
+skset pull my-skill
+skset pull --all
+skset pull --target claude-code
+skset pull --all --from-repo
 ```
 
 ## Configuration
 
-Default configuration is created at `~/.skset/config.yaml`:
+Configuration is stored at `~/.skset/config.yaml` with support for 5 targets:
 
-```yaml
-library: ~/.skset/library
-targets:
-  claude-code:
-    global: ~/.claude/skills
-    repo: .claude/skills
-  opencode:
-    global: ~/.opencode/skill
-    repo: .opencode/skill
-  codex:
-    global: ~/.codex/skills
-    repo: .codex/skills
-  copilot:
-    repo: .github/skills
-  amp:
-    global: ~/.config/agents/skills
-    repo: .agents/skills
-groups:
-  core: []
-```
+- **claude-code**: `~/.claude/skills/` (global), `.claude/skills/` (repo)
+- **opencode**: `~/.opencode/skill/` (global), `.opencode/skill/` (repo)
+- **codex**: `~/.codex/skills/` (global), `.codex/skills/` (repo)
+- **copilot**: `.github/skills/` (repo only)
+- **amp**: `~/.config/agents/skills/` (global), `.agents/skills/` (repo)
 
 ## Skill Format
 
-Skills follow the Agent Skills specification with a `SKILL.md` file containing YAML frontmatter:
-
-```markdown
----
-name: my-skill
-description: A brief description of what this skill does
----
-
-# My Skill
-
-Instructions for the agent...
-```
-
-Required fields:
-- `name`: 1-64 chars, lowercase alphanumeric + hyphens
-- `description`: 1-1024 chars
-
-Optional directories:
-- `scripts/` - Helper scripts
-- `references/` - Reference files
-- `assets/` - Images and other assets
+Skills follow the [Agent Skills specification](https://agentskills.io/specification) with a `SKILL.md` file containing YAML frontmatter and markdown instructions.
 
 ## Development
 
@@ -237,16 +130,12 @@ Optional directories:
 # Install dependencies
 bun install
 
-# Run CLI
+# Run CLI during development
 bun run dev <command>
 
-# Build binary
-bun run build
-
-# Run tests (when implemented)
+# Run tests
 bun test
+
+# Build standalone binary
+bun run build
 ```
-
-## License
-
-MIT
