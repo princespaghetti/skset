@@ -308,22 +308,14 @@ skset groups create my-group
 skset groups delete my-group
 ```
 
-### `skset config`
-View or edit configuration.
+### Configuration Management
 
-```bash
-# Show current config
-skset config
+Configuration is stored at `~/.skset/config.yaml`. Users can edit this file directly to:
+- Change library location
+- Add custom targets for new AI coding tools
+- Modify target paths
 
-# Open config in editor
-skset config --edit
-
-# Set a specific value
-skset config set library ~/my-skills
-
-# Add a custom target
-skset config add-target my-tool --global ~/.my-tool/skills --repo .my-tool/skills
-```
+No dedicated `config` command is planned - manual YAML editing is simple and infrequent enough that a CLI wrapper adds unnecessary complexity.
 
 ### `skset sync`
 Show differences between library and targets (v1: status only).
@@ -351,7 +343,6 @@ The initial v1 release focuses on core functionality:
 - `skset remove` - Remove skills from library (use manual file deletion)
 - `skset pull` - Import skills from targets (use `add` with explicit paths)
 - `skset groups` - Group management (manual config.yaml editing)
-- `skset config` - Config editing (manual config.yaml editing)
 - `skset sync` - Bidirectional sync
 
 ## Implementation Details
@@ -399,9 +390,7 @@ skset/
 │   │   ├── pull.ts
 │   │   ├── validate.ts
 │   │   ├── new.ts
-│   │   ├── groups.ts
-│   │   ├── config.ts
-│   │   └── sync.ts
+│   │   └── groups.ts
 │   ├── lib/
 │   │   ├── config.ts         # Config loading/saving
 │   │   ├── library.ts        # Library operations
@@ -715,11 +704,13 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 - [x] Read-only sources support (Source interface, glob patterns)
 - [x] Plugin skill discovery (e.g., ~/.claude/plugins/marketplaces/*/*/skills)
 - [x] Inventory integration for read-only sources
-- [ ] `skset config` command (deferred - manual config.yaml editing)
-- [ ] `skset sync` command (deferred to v2)
-- [ ] Shell completions (bash, zsh, fish) (future enhancement)
 - [x] Error handling improvements
 - [x] Help text and documentation
+
+**Not Planned:**
+- `skset config` - Users can edit `~/.skset/config.yaml` directly
+- `skset sync` - Deferred to v2 if needed
+- Shell completions - Future enhancement if requested
 
 ### Phase 5: Release ✅ COMPLETE
 - [x] README with usage examples

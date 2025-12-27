@@ -177,7 +177,9 @@ All core CRUD and distribution commands are implemented:
 
 Read-only sources (e.g., marketplace plugins) are automatically discovered in inventory but never used as push targets.
 
-Deferred to future releases: `config`, `sync`
+**Configuration:** Users edit `~/.skset/config.yaml` directly - no dedicated `config` command planned.
+
+Deferred to future releases: `sync`
 
 ## Technology Stack
 
@@ -218,4 +220,6 @@ If you forget, you'll get a "rejected (fetch first)" error. This is expected beh
 4. **Groups & Read-Only Sources** ✅: `groups` command, group filtering, read-only source discovery
 5. **Release** ✅: Documentation, GitHub Actions, Homebrew Cask
 
-Deferred: `config` command, `sync` command, shell completions
+**Not Planned:** `config` command (manual YAML editing is sufficient)
+
+**Deferred:** `sync` command, shell completions
