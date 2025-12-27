@@ -11,14 +11,16 @@ import type { Skill, ValidationResult } from '../types/index.ts';
 /**
  * Parse a SKILL.md file and extract frontmatter
  * @param dirPath - Absolute path to skill directory
- * @param source - Where this skill is from ('library' or 'target')
+ * @param source - Where this skill is from ('library', 'target', or 'plugin')
  * @param target - Target name if source is 'target'
+ * @param readonly - Whether this skill source is read-only
  * @returns Parsed skill object or null if SKILL.md doesn't exist
  */
 export async function parseSkill(
   dirPath: string,
-  source: 'library' | 'target' = 'library',
-  target?: string
+  source: 'library' | 'target' | 'plugin' = 'library',
+  target?: string,
+  readonly?: boolean
 ): Promise<Skill | null> {
   // Try case-insensitive SKILL.md search
   const skillFile = await findSkillFile(dirPath);
@@ -45,6 +47,7 @@ export async function parseSkill(
       path: dirPath,
       source,
       target,
+      readonly,
     };
 
     return skill;
@@ -171,12 +174,14 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
  * @param dirPath - Directory to scan for skills
  * @param source - Where these skills are from
  * @param target - Target name if source is 'target'
+ * @param readonly - Whether this skill source is read-only
  * @returns Array of parsed skills
  */
 export async function listSkills(
   dirPath: string,
-  source: 'library' | 'target' = 'library',
-  target?: string
+  source: 'library' | 'target' | 'plugin' = 'library',
+  target?: string,
+  readonly?: boolean
 ): Promise<Skill[]> {
   if (!existsSync(dirPath)) {
     return [];
@@ -189,7 +194,7 @@ export async function listSkills(
     for (const entry of entries) {
       if (entry.isDirectory()) {
         const skillPath = join(dirPath, entry.name);
-        const skill = await parseSkill(skillPath, source, target);
+        const skill = await parseSkill(skillPath, source, target, readonly);
 
         if (skill) {
           skills.push(skill);
@@ -199,6 +204,38 @@ export async function listSkills(
 
     return skills;
   } catch {
+    return [];
+  }
+}
+
+/**
+ * List all skills from a glob pattern (for read-only sources like plugins)
+ * @param globPattern - Glob pattern to match directories (e.g., ~/.claude/plugins/*\/*\/skills)
+ * @param sourceName - Name of the source (e.g., 'claude-plugins')
+ * @param readonly - Whether this source is read-only
+ * @returns Array of parsed skills from all matching directories
+ */
+export async function listSkillsFromGlob(
+  globPattern: string,
+  sourceName: string,
+  readonly: boolean
+): Promise<Skill[]> {
+  try {
+    const { Glob } = await import('bun');
+    const glob = new Glob(globPattern);
+    const allSkills: Skill[] = [];
+
+    // Scan for matching directories
+    for await (const path of glob.scan({ onlyFiles: false })) {
+      if (existsSync(path)) {
+        const skills = await listSkills(path, 'plugin', sourceName, readonly);
+        allSkills.push(...skills);
+      }
+    }
+
+    return allSkills;
+  } catch (err) {
+    // If glob fails, return empty array
     return [];
   }
 }

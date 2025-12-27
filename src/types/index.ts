@@ -21,9 +21,11 @@ export interface Skill {
   /** Absolute path to the skill directory */
   path: string;
   /** Where this skill was found */
-  source: 'library' | 'target';
+  source: 'library' | 'target' | 'plugin';
   /** Target name if source is 'target' */
   target?: string;
+  /** Whether this skill source is read-only (prevents push operations) */
+  readonly?: boolean;
 }
 
 /**
@@ -65,6 +67,18 @@ export interface Group {
 }
 
 /**
+ * Read-only source configuration for skill discovery
+ */
+export interface Source {
+  /** Source name (e.g., 'claude-plugins') */
+  name: string;
+  /** Path to skills (supports glob patterns, e.g., ~/.claude/plugins/*/*/skills) */
+  path: string;
+  /** Whether this source is read-only (prevents push operations) */
+  readonly: boolean;
+}
+
+/**
  * skset configuration schema
  */
 export interface Config {
@@ -74,6 +88,8 @@ export interface Config {
   targets: Record<string, Omit<Target, 'name'>>;
   /** Map of group names to skill name arrays */
   groups: Record<string, string[]>;
+  /** Map of source names to their configurations (for read-only skill discovery) */
+  sources?: Record<string, Omit<Source, 'name'>>;
 }
 
 /**
@@ -84,6 +100,8 @@ export interface InventoryOptions {
   library?: boolean;
   /** Show specific target only */
   target?: string;
+  /** Filter to show only skills in this group */
+  group?: string;
   /** Output as JSON */
   json?: boolean;
 }
@@ -98,10 +116,30 @@ export interface PushOptions {
   repo?: boolean;
   /** Push all library skills */
   all?: boolean;
+  /** Push all skills in this group */
+  group?: string;
   /** Dry run - show what would happen */
   dryRun?: boolean;
   /** Force overwrite without confirmation */
   force?: boolean;
+}
+
+/**
+ * Options for the add command
+ */
+export interface AddOptions {
+  /** Add skill to this group after adding to library */
+  group?: string;
+}
+
+/**
+ * Options for the remove command
+ */
+export interface RemoveOptions {
+  /** Force removal without confirmation */
+  force?: boolean;
+  /** Remove from group only, keep in library */
+  fromGroup?: string;
 }
 
 /**

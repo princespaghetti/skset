@@ -54,6 +54,12 @@ export function getDefaultConfig(): Config {
     groups: {
       core: [],
     },
+    sources: {
+      'claude-plugins': {
+        path: '~/.claude/plugins/marketplaces/*/*/skills',
+        readonly: true,
+      },
+    },
   };
 }
 
@@ -110,4 +116,126 @@ export async function getLibraryPath(): Promise<string> {
  */
 export function isInitialized(): boolean {
   return existsSync(getConfigPath());
+}
+
+/**
+ * Get all skills in a group
+ */
+export function getSkillsInGroup(config: Config, groupName: string): string[] {
+  return config.groups[groupName] || [];
+}
+
+/**
+ * Check if a group exists
+ */
+export function groupExists(config: Config, groupName: string): boolean {
+  return groupName in config.groups;
+}
+
+/**
+ * Check if a skill exists in a group
+ */
+export function skillExistsInGroup(config: Config, groupName: string, skillName: string): boolean {
+  const skills = getSkillsInGroup(config, groupName);
+  return skills.includes(skillName);
+}
+
+/**
+ * Add a skill to a group (creates group if it doesn't exist)
+ */
+export function addSkillToGroup(config: Config, groupName: string, skillName: string): Config {
+  const updatedConfig = { ...config };
+
+  // Initialize group if it doesn't exist
+  if (!updatedConfig.groups[groupName]) {
+    updatedConfig.groups[groupName] = [];
+  }
+
+  // Add skill if not already in group
+  if (!updatedConfig.groups[groupName].includes(skillName)) {
+    updatedConfig.groups[groupName] = [...updatedConfig.groups[groupName], skillName];
+  }
+
+  return updatedConfig;
+}
+
+/**
+ * Remove a skill from a group
+ */
+export function removeSkillFromGroup(config: Config, groupName: string, skillName: string): Config {
+  const updatedConfig = { ...config };
+
+  if (updatedConfig.groups[groupName]) {
+    updatedConfig.groups[groupName] = updatedConfig.groups[groupName].filter(
+      (name) => name !== skillName
+    );
+  }
+
+  return updatedConfig;
+}
+
+/**
+ * Remove a skill from all groups
+ */
+export function removeSkillFromAllGroups(config: Config, skillName: string): Config {
+  const updatedConfig = { ...config };
+
+  for (const groupName of Object.keys(updatedConfig.groups)) {
+    updatedConfig.groups[groupName] = updatedConfig.groups[groupName].filter(
+      (name) => name !== skillName
+    );
+  }
+
+  return updatedConfig;
+}
+
+/**
+ * Create a new empty group
+ */
+export function createGroup(config: Config, groupName: string): Config {
+  const updatedConfig = { ...config };
+
+  if (!updatedConfig.groups[groupName]) {
+    updatedConfig.groups[groupName] = [];
+  }
+
+  return updatedConfig;
+}
+
+/**
+ * Delete a group (skills remain in library)
+ */
+export function deleteGroup(config: Config, groupName: string): Config {
+  const updatedConfig = { ...config };
+
+  if (updatedConfig.groups[groupName]) {
+    delete updatedConfig.groups[groupName];
+  }
+
+  return updatedConfig;
+}
+
+/**
+ * Get all group names
+ */
+export function getGroupNames(config: Config): string[] {
+  return Object.keys(config.groups);
+}
+
+/**
+ * Build a reverse map of skill names to group names
+ */
+export function getSkillToGroupsMap(config: Config): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+
+  for (const [groupName, skills] of Object.entries(config.groups)) {
+    for (const skillName of skills) {
+      if (!map.has(skillName)) {
+        map.set(skillName, []);
+      }
+      map.get(skillName)!.push(groupName);
+    }
+  }
+
+  return map;
 }

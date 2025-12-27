@@ -37,6 +37,7 @@ bun test
 - **Skill**: Directory with `SKILL.md` (YAML frontmatter + markdown) plus optional `scripts/`, `references/`, `assets/`
 - **Library**: Central storage at `~/.skset/library/` organizing skills into groups
 - **Target**: Destination for skill distribution (e.g., `~/.claude/skills/`, `.github/skills/`)
+- **Source**: Read-only location for skill discovery (e.g., marketplace plugin directories). Sources are shown in inventory but never used as push targets.
 - **Group**: Logical skill collection for batch operations (e.g., "core", "work", "personal")
 
 ### Project Structure
@@ -71,14 +72,22 @@ interface Skill {
   metadata?: Record<string, string>;
   allowedTools?: string[];
   path: string;  // Absolute path to skill directory
-  source: 'library' | 'target';
+  source: 'library' | 'target' | 'plugin';
   target?: string;
+  readonly?: boolean;  // Prevents push operations to this skill's location
+}
+
+interface Source {
+  name: string;
+  path: string;  // Supports glob patterns (e.g., ~/.claude/plugins/*/*/skills)
+  readonly: boolean;  // If true, shown in inventory but not a push target
 }
 
 interface Config {
   library: string;
   targets: Record<string, { global?: string; repo?: string }>;
   groups: Record<string, string[]>;
+  sources?: Record<string, Omit<Source, 'name'>>;  // Read-only skill sources
 }
 
 interface ValidationResult {
@@ -147,6 +156,10 @@ targets:
     repo: .agents/skills
 groups:
   core: []
+sources:
+  claude-plugins:
+    path: ~/.claude/plugins/marketplaces/*/*/skills
+    readonly: true
 ```
 
 ## v1 Commands
@@ -154,14 +167,17 @@ groups:
 All core CRUD and distribution commands are implemented:
 - `skset init` - Initialize configuration and library
 - `skset new [skill]` - Create new skill from template
-- `skset add <path>` - Add skills to library
-- `skset remove <skill>` - Remove skill from library
+- `skset add <path>` - Add skills to library (supports `--group`)
+- `skset remove <skill>` - Remove skill from library (supports `--from-group`)
 - `skset validate <skill>` - Validate skills against spec
-- `skset inventory` - List skills across all locations
-- `skset push <skill>` - Distribute skills to targets
+- `skset inventory` - List skills across all locations (supports `--group` filter, shows group membership)
+- `skset push <skill>` - Distribute skills to targets (supports `--group`)
 - `skset pull <skill>` - Import skills from targets
+- `skset groups` - Manage skill groups (list, create, delete, add, remove)
 
-Deferred to future releases: `groups`, `config`, `sync`
+Read-only sources (e.g., marketplace plugins) are automatically discovered in inventory but never used as push targets.
+
+Deferred to future releases: `config`, `sync`
 
 ## Technology Stack
 
@@ -185,8 +201,10 @@ Installation: `brew tap <owner>/skset && brew install skset`
 
 ## Development Phases (PLAN.md)
 
-1. **Core Infrastructure**: Project setup, config handling, skill validation, `init` & `validate` commands
-2. **Library Management**: `add`, `remove`, `new`, `inventory` (library only)
-3. **Distribution**: Target resolution, `push`, `pull`, full `inventory`, conflict detection
-4. **Groups & Polish**: `groups`, `config`, `sync`, completions, error handling
-5. **Release**: Documentation, GitHub Actions, Homebrew Cask
+1. **Core Infrastructure** ✅: Project setup, config handling, skill validation, `init` & `validate` commands
+2. **Library Management** ✅: `add`, `remove`, `new`, `inventory` (library only)
+3. **Distribution** ✅: Target resolution, `push`, `pull`, full `inventory`, conflict detection
+4. **Groups & Read-Only Sources** ✅: `groups` command, group filtering, read-only source discovery
+5. **Release** ✅: Documentation, GitHub Actions, Homebrew Cask
+
+Deferred: `config` command, `sync` command, shell completions

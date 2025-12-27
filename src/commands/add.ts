@@ -5,7 +5,8 @@
 import { join, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { confirm } from '@clack/prompts';
-import { getLibraryPath } from '../lib/config.ts';
+import type { AddOptions } from '../types/index.ts';
+import { getLibraryPath, loadConfig, saveConfig, addSkillToGroup } from '../lib/config.ts';
 import { parseSkill, validateSkill } from '../lib/skills.ts';
 import { copyDirectory, skillExists } from '../lib/copy.ts';
 import * as out from '../utils/output.ts';
@@ -13,7 +14,7 @@ import * as out from '../utils/output.ts';
 /**
  * Add a skill to the library
  */
-export async function add(skillPath: string): Promise<void> {
+export async function add(skillPath: string, options: AddOptions = {}): Promise<void> {
   try {
     // Resolve path
     const sourcePath = resolve(skillPath);
@@ -78,6 +79,14 @@ export async function add(skillPath: string): Promise<void> {
 
     out.success(`Added "${skill.name}" to library`);
     out.dim(`Copied ${result.filesCopied.length} file(s)`);
+
+    // Add to group if specified
+    if (options.group) {
+      const config = await loadConfig();
+      const updatedConfig = addSkillToGroup(config, options.group, skill.name);
+      await saveConfig(updatedConfig);
+      out.success(`Added "${skill.name}" to group "${options.group}"`);
+    }
   } catch (err) {
     out.error('Failed to add skill', (err as Error).message);
     process.exit(1);

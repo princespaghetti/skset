@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { confirm } from '@clack/prompts';
 import type { PushOptions } from '../types/index.ts';
-import { getLibraryPath } from '../lib/config.ts';
+import { getLibraryPath, loadConfig, getSkillsInGroup, groupExists } from '../lib/config.ts';
 import { listSkills, parseSkill } from '../lib/skills.ts';
 import { copyDirectory, skillExists, directoriesMatch } from '../lib/copy.ts';
 import { resolveTargetPaths } from '../lib/targets.ts';
@@ -14,6 +14,8 @@ import * as out from '../utils/output.ts';
 
 /**
  * Push skills to targets
+ * Note: Read-only sources (configured in config.sources) are never used as push targets.
+ * They are only for skill discovery in inventory commands.
  */
 export async function push(
   skillName?: string,
@@ -133,7 +135,25 @@ async function getSkillsToPush(
   skillName: string | undefined,
   options: PushOptions
 ): Promise<string[]> {
-  if (options.all) {
+  if (options.group) {
+    // Push all skills in a group
+    const config = await loadConfig();
+
+    if (!groupExists(config, options.group)) {
+      out.error(`Group "${options.group}" does not exist`);
+      out.info('Run "skset groups list" to see available groups');
+      process.exit(1);
+    }
+
+    const skills = getSkillsInGroup(config, options.group);
+
+    if (skills.length === 0) {
+      out.info(`Group "${options.group}" is empty`);
+      out.info(`Add skills with: skset groups add ${options.group} <skill>`);
+    }
+
+    return skills;
+  } else if (options.all) {
     // Push all skills
     const skills = await listSkills(libraryPath);
     return skills.map(s => s.name);

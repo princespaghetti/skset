@@ -669,6 +669,8 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 - ✅ Validation against Agent Skills spec
 - ✅ Bidirectional distribution (push/pull)
 - ✅ Support for 5 AI coding tools
+- ✅ Groups command and integration (`--group` flags, group filtering)
+- ✅ Read-only sources for skill discovery (marketplace plugins)
 - ✅ 41 tests passing
 - ✅ CI/CD workflows configured
 - ✅ Homebrew Cask formula ready
@@ -705,8 +707,14 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 - [x] `skset inventory` (full)
 - [x] Conflict detection
 
-### Phase 4: Groups & Polish 🚧 PARTIAL
-- [ ] `skset groups` command (deferred - manual config.yaml editing)
+### Phase 4: Groups & Read-Only Sources ✅ COMPLETE
+- [x] `skset groups` command (list, create, delete, add, remove)
+- [x] Group helper functions in config.ts
+- [x] `--group` flag integration (add, push, inventory, remove)
+- [x] Group membership display in inventory
+- [x] Read-only sources support (Source interface, glob patterns)
+- [x] Plugin skill discovery (e.g., ~/.claude/plugins/marketplaces/*/*/skills)
+- [x] Inventory integration for read-only sources
 - [ ] `skset config` command (deferred - manual config.yaml editing)
 - [ ] `skset sync` command (deferred to v2)
 - [ ] Shell completions (bash, zsh, fish) (future enhancement)

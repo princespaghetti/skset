@@ -13,6 +13,7 @@ import { validate } from './commands/validate.ts';
 import { inventory } from './commands/inventory.ts';
 import { push } from './commands/push.ts';
 import { pull } from './commands/pull.ts';
+import * as groups from './commands/groups.ts';
 import pkg from '../package.json' with { type: 'json' };
 
 const program = new Command();
@@ -34,8 +35,9 @@ program
 program
   .command('add <path>')
   .description('Add a skill to the library')
-  .action(async (path: string) => {
-    await add(path);
+  .option('-g, --group <name>', 'Add skill to the specified group')
+  .action(async (path: string, options) => {
+    await add(path, options);
   });
 
 // skset remove <skill>
@@ -43,8 +45,9 @@ program
   .command('remove <skill>')
   .description('Remove a skill from the library')
   .option('--force', 'Remove without confirmation')
+  .option('--from-group <name>', 'Remove from group only, keep in library')
   .action(async (skill: string, options) => {
-    await remove(skill, options.force);
+    await remove(skill, options);
   });
 
 // skset new [skill]
@@ -70,6 +73,7 @@ program
   .description('List all skills across library and targets')
   .option('--library', 'Show library skills only')
   .option('--target <name>', 'Show specific target only')
+  .option('-g, --group <name>', 'Filter to show only skills in this group')
   .option('--json', 'Output as JSON')
   .action(async (options) => {
     await inventory(options);
@@ -80,6 +84,7 @@ program
   .command('push [skill]')
   .description('Push skills from library to targets')
   .option('--all', 'Push all library skills')
+  .option('-g, --group <name>', 'Push all skills in the specified group')
   .option('--target <name>', 'Push to specific target only')
   .option('--repo', 'Push to repo-local directories instead of global')
   .option('--dry-run', 'Show what would be pushed without actually pushing')
@@ -98,6 +103,56 @@ program
   .option('--force', 'Force overwrite without confirmation')
   .action(async (skill: string | undefined, options) => {
     await pull(skill, options);
+  });
+
+// skset groups
+const groupsCmd = program
+  .command('groups')
+  .description('Manage skill groups');
+
+// Default action for bare `skset groups` = list
+groupsCmd.action(async () => {
+  await groups.list();
+});
+
+// skset groups list
+groupsCmd
+  .command('list')
+  .description('List all groups and their skills')
+  .action(async () => {
+    await groups.list();
+  });
+
+// skset groups create <name>
+groupsCmd
+  .command('create <name>')
+  .description('Create a new group')
+  .action(async (name: string) => {
+    await groups.create(name);
+  });
+
+// skset groups delete <name>
+groupsCmd
+  .command('delete <name>')
+  .description('Delete a group (skills remain in library)')
+  .action(async (name: string) => {
+    await groups.deleteGroup(name);
+  });
+
+// skset groups add <group> <skill>
+groupsCmd
+  .command('add <group> <skill>')
+  .description('Add a skill to a group')
+  .action(async (group: string, skill: string) => {
+    await groups.add(group, skill);
+  });
+
+// skset groups remove <group> <skill>
+groupsCmd
+  .command('remove <group> <skill>')
+  .description('Remove a skill from a group')
+  .action(async (group: string, skill: string) => {
+    await groups.remove(group, skill);
   });
 
 // Parse CLI arguments

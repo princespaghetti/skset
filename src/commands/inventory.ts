@@ -4,10 +4,16 @@
 
 import { existsSync } from 'node:fs';
 import type { InventoryOptions, Skill } from '../types/index.ts';
-import { getLibraryPath, loadConfig } from '../lib/config.ts';
-import { listSkills } from '../lib/skills.ts';
+import {
+  getLibraryPath,
+  loadConfig,
+  getSkillToGroupsMap,
+  getSkillsInGroup,
+  groupExists,
+} from '../lib/config.ts';
+import { listSkills, listSkillsFromGlob } from '../lib/skills.ts';
 import { getGlobalPaths, getRepoPaths } from '../lib/targets.ts';
-import { isInGitRepo } from '../utils/paths.ts';
+import { isInGitRepo, expandHome } from '../utils/paths.ts';
 import * as out from '../utils/output.ts';
 import pc from 'picocolors';
 
@@ -21,6 +27,16 @@ interface InventorySection {
  */
 export async function inventory(options: InventoryOptions = {}): Promise<void> {
   try {
+    // Validate group if specified
+    if (options.group) {
+      const config = await loadConfig();
+      if (!groupExists(config, options.group)) {
+        out.error(`Group "${options.group}" does not exist`);
+        out.info('Run "skset groups list" to see available groups');
+        process.exit(1);
+      }
+    }
+
     if (options.json) {
       await inventoryJSON(options);
     } else {
@@ -33,26 +49,47 @@ export async function inventory(options: InventoryOptions = {}): Promise<void> {
 }
 
 /**
+ * Filter skills by group if group option is specified
+ */
+function filterSkillsByGroup(skills: Skill[], groupName: string | undefined, groupSkills: string[]): Skill[] {
+  if (!groupName) {
+    return skills;
+  }
+  return skills.filter(skill => groupSkills.includes(skill.name));
+}
+
+/**
  * Show inventory as formatted text
  */
 async function inventoryText(options: InventoryOptions): Promise<void> {
   const sections: InventorySection[] = [];
+  const config = await loadConfig();
+
+  // Build skill-to-groups map for displaying group membership
+  const skillToGroupsMap = getSkillToGroupsMap(config);
+
+  // Get skills in group if filtering by group
+  const groupSkills = options.group ? getSkillsInGroup(config, options.group) : [];
 
   // Library
   if (!options.target) {
     const libraryPath = await getLibraryPath();
-    const librarySkills = existsSync(libraryPath)
+    let librarySkills = existsSync(libraryPath)
       ? await listSkills(libraryPath, 'library')
       : [];
 
+    // Filter by group if specified
+    librarySkills = filterSkillsByGroup(librarySkills, options.group, groupSkills);
+
+    const titleSuffix = options.group ? ` (group: ${options.group})` : '';
     sections.push({
-      title: `Library (${librarySkills.length} skill${librarySkills.length !== 1 ? 's' : ''})`,
+      title: `Library (${librarySkills.length} skill${librarySkills.length !== 1 ? 's' : ''})${titleSuffix}`,
       skills: librarySkills,
     });
 
     if (options.library) {
       // Only show library
-      printSections(sections);
+      printSections(sections, skillToGroupsMap);
       return;
     }
   }
@@ -69,20 +106,27 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
         process.exit(1);
       }
 
-      const targetSkills = existsSync(targetPath)
+      let targetSkills = existsSync(targetPath)
         ? await listSkills(targetPath, 'target', options.target)
         : [];
 
+      // Filter by group if specified
+      targetSkills = filterSkillsByGroup(targetSkills, options.group, groupSkills);
+
+      const titleSuffix = options.group ? ` (group: ${options.group})` : '';
       sections.push({
-        title: `${options.target} (${targetSkills.length} skill${targetSkills.length !== 1 ? 's' : ''})`,
+        title: `${options.target} (${targetSkills.length} skill${targetSkills.length !== 1 ? 's' : ''})${titleSuffix}`,
         skills: targetSkills,
       });
     } else {
       // All targets
       for (const [targetName, targetPath] of globalPaths) {
-        const targetSkills = existsSync(targetPath)
+        let targetSkills = existsSync(targetPath)
           ? await listSkills(targetPath, 'target', targetName)
           : [];
+
+        // Filter by group if specified
+        targetSkills = filterSkillsByGroup(targetSkills, options.group, groupSkills);
 
         sections.push({
           title: `${targetName} Global (${targetSkills.length} skill${targetSkills.length !== 1 ? 's' : ''})`,
@@ -92,13 +136,15 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
 
       // Repo paths if in git repo
       if (isInGitRepo()) {
-        const config = await loadConfig();
         const repoPaths = getRepoPaths(config);
 
         for (const [targetName, repoPath] of repoPaths) {
-          const repoSkills = existsSync(repoPath)
+          let repoSkills = existsSync(repoPath)
             ? await listSkills(repoPath, 'target', `${targetName}-repo`)
             : [];
+
+          // Filter by group if specified
+          repoSkills = filterSkillsByGroup(repoSkills, options.group, groupSkills);
 
           sections.push({
             title: `${targetName} Repo (${repoSkills.length} skill${repoSkills.length !== 1 ? 's' : ''})`,
@@ -106,16 +152,36 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
           });
         }
       }
+
+      // Read-only sources (e.g., plugin directories)
+      if (config.sources) {
+        for (const [sourceName, sourceConfig] of Object.entries(config.sources)) {
+          let sourceSkills = await listSkillsFromGlob(
+            expandHome(sourceConfig.path),
+            sourceName,
+            sourceConfig.readonly
+          );
+
+          // Filter by group if specified
+          sourceSkills = filterSkillsByGroup(sourceSkills, options.group, groupSkills);
+
+          const readonlyLabel = sourceConfig.readonly ? ' (read-only)' : '';
+          sections.push({
+            title: `${sourceName}${readonlyLabel} (${sourceSkills.length} skill${sourceSkills.length !== 1 ? 's' : ''})`,
+            skills: sourceSkills,
+          });
+        }
+      }
     }
   }
 
-  printSections(sections);
+  printSections(sections, skillToGroupsMap);
 }
 
 /**
  * Print inventory sections
  */
-function printSections(sections: InventorySection[]): void {
+function printSections(sections: InventorySection[], skillToGroupsMap: Map<string, string[]>): void {
   console.log('');
 
   for (const section of sections) {
@@ -129,8 +195,14 @@ function printSections(sections: InventorySection[]): void {
           ? skill.description.slice(0, 57) + '...'
           : skill.description;
 
+        // Show group membership for library skills
+        const groups = skillToGroupsMap.get(skill.name);
+        const groupsBadge = groups && groups.length > 0
+          ? ` ${out.dim(`[${groups.join(', ')}]`)}`
+          : '';
+
         console.log(
-          `  ${pc.green('✓')} ${out.bold(skill.name)} ${out.dim('-')} ${desc}`
+          `  ${pc.green('✓')} ${out.bold(skill.name)}${groupsBadge} ${out.dim('-')} ${desc}`
         );
       }
     }
@@ -144,13 +216,20 @@ function printSections(sections: InventorySection[]): void {
  */
 async function inventoryJSON(options: InventoryOptions): Promise<void> {
   const result: Record<string, Skill[]> = {};
+  const config = await loadConfig();
+
+  // Get skills in group if filtering by group
+  const groupSkills = options.group ? getSkillsInGroup(config, options.group) : [];
 
   // Library
   if (!options.target) {
     const libraryPath = await getLibraryPath();
-    const librarySkills = existsSync(libraryPath)
+    let librarySkills = existsSync(libraryPath)
       ? await listSkills(libraryPath, 'library')
       : [];
+
+    // Filter by group if specified
+    librarySkills = filterSkillsByGroup(librarySkills, options.group, groupSkills);
 
     result.library = librarySkills;
 
@@ -171,31 +250,55 @@ async function inventoryJSON(options: InventoryOptions): Promise<void> {
         process.exit(1);
       }
 
-      const targetSkills = existsSync(targetPath)
+      let targetSkills = existsSync(targetPath)
         ? await listSkills(targetPath, 'target', options.target)
         : [];
+
+      // Filter by group if specified
+      targetSkills = filterSkillsByGroup(targetSkills, options.group, groupSkills);
 
       result[options.target] = targetSkills;
     } else {
       for (const [targetName, targetPath] of globalPaths) {
-        const targetSkills = existsSync(targetPath)
+        let targetSkills = existsSync(targetPath)
           ? await listSkills(targetPath, 'target', targetName)
           : [];
+
+        // Filter by group if specified
+        targetSkills = filterSkillsByGroup(targetSkills, options.group, groupSkills);
 
         result[`${targetName}-global`] = targetSkills;
       }
 
       // Repo paths
       if (isInGitRepo()) {
-        const config = await loadConfig();
         const repoPaths = getRepoPaths(config);
 
         for (const [targetName, repoPath] of repoPaths) {
-          const repoSkills = existsSync(repoPath)
+          let repoSkills = existsSync(repoPath)
             ? await listSkills(repoPath, 'target', `${targetName}-repo`)
             : [];
 
+          // Filter by group if specified
+          repoSkills = filterSkillsByGroup(repoSkills, options.group, groupSkills);
+
           result[`${targetName}-repo`] = repoSkills;
+        }
+      }
+
+      // Read-only sources (e.g., plugin directories)
+      if (config.sources) {
+        for (const [sourceName, sourceConfig] of Object.entries(config.sources)) {
+          let sourceSkills = await listSkillsFromGlob(
+            expandHome(sourceConfig.path),
+            sourceName,
+            sourceConfig.readonly
+          );
+
+          // Filter by group if specified
+          sourceSkills = filterSkillsByGroup(sourceSkills, options.group, groupSkills);
+
+          result[sourceName] = sourceSkills;
         }
       }
     }
