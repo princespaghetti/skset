@@ -74,6 +74,8 @@ jobs:
         run: |
           for dir in skset-*; do
             if [ -d "$dir" ]; then
+              # Rename binary to just 'skset' before archiving
+              mv "$dir"/skset-* "$dir"/skset
               tar -czvf "${dir}.tar.gz" -C "$dir" .
               sha256sum "${dir}.tar.gz" >> checksums.txt
             fi
