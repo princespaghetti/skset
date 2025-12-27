@@ -317,15 +317,17 @@ Configuration is stored at `~/.skset/config.yaml`. Users can edit this file dire
 
 No dedicated `config` command is planned - manual YAML editing is simple and infrequent enough that a CLI wrapper adds unnecessary complexity.
 
-### `skset sync`
-Show differences between library and targets (v1: status only).
+### Sync (Not Planned)
 
-```bash
-# Show what differs between library and targets
-skset sync --status
-```
+Originally considered a `sync` command to show differences between library and targets, but this is redundant with existing commands:
 
-Full bidirectional sync deferred to v2.
+- **`inventory`** - Shows what skills exist where (library, targets, sources)
+- **`push --dry-run`** - Shows exactly what would change before pushing
+- **Groups** - Define which skills belong where, making "sync status" unnecessary
+
+The library → targets workflow is intentionally unidirectional: organize in library, push to targets. For the rare case of importing from targets, `pull` handles it.
+
+Adding `sync` would introduce complexity without clear value beyond what `inventory` + `push --dry-run` already provide.
 
 ## MVP Scope
 
@@ -338,12 +340,7 @@ The initial v1 release focuses on core functionality:
 - `skset push <skill>` - Distribute skills to targets
 - `skset validate <skill>` - Validate skills against Agent Skills spec
 
-**Deferred to Future Releases:**
-- `skset new` - Scaffold new skills (use manual creation for now)
-- `skset remove` - Remove skills from library (use manual file deletion)
-- `skset pull` - Import skills from targets (use `add` with explicit paths)
-- `skset groups` - Group management (manual config.yaml editing)
-- `skset sync` - Bidirectional sync
+**All MVP commands now implemented** - no features deferred.
 
 ## Implementation Details
 
@@ -629,14 +626,16 @@ end
 **Note on GitHub Actions:**
 https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike Go's GoReleaser, there's no all-in-one release action for Bun - the workflow above handles build + release manually.
 
-## Future Enhancements (Out of Scope for v1)
+## Future Enhancements (If Requested)
 
-1. **Remote registries** - `skset add github:user/repo/skill`
-2. **Skill versioning** - Track versions, update notifications
-3. **Skill dependencies** - Skills that require other skills
-4. **Team sharing** - Shared remote library locations
-5. **Watch mode** - Auto-sync on file changes
+1. **Shell completions** - bash, zsh, fish autocompletion for commands and arguments
+2. **Remote registries** - `skset add github:user/repo/skill` for sharing skills
+3. **Skill versioning** - Track versions, update notifications
+4. **Skill dependencies** - Skills that require other skills
+5. **Team sharing** - Shared remote library locations
 6. **Plugins** - Extensible target definitions
+
+**Note:** "Watch mode" and "sync" features are intentionally not planned - the library → targets workflow is unidirectional by design, and `push --dry-run` provides diff functionality.
 
 ## Success Criteria
 
@@ -709,8 +708,8 @@ https://github.com/oven-sh/setup-bun is the official Bun GitHub Action. Unlike G
 
 **Not Planned:**
 - `skset config` - Users can edit `~/.skset/config.yaml` directly
-- `skset sync` - Deferred to v2 if needed
-- Shell completions - Future enhancement if requested
+- `skset sync` - Redundant with `inventory` + `push --dry-run` + groups
+- Shell completions - Future enhancement if users request it
 
 ### Phase 5: Release ✅ COMPLETE
 - [x] README with usage examples

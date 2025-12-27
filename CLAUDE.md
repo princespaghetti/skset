@@ -179,7 +179,7 @@ Read-only sources (e.g., marketplace plugins) are automatically discovered in in
 
 **Configuration:** Users edit `~/.skset/config.yaml` directly - no dedicated `config` command planned.
 
-Deferred to future releases: `sync`
+**Sync:** Not planned - `inventory` + `push --dry-run` + groups provide equivalent functionality without additional complexity.
 
 ## Technology Stack
 
@@ -220,6 +220,8 @@ If you forget, you'll get a "rejected (fetch first)" error. This is expected beh
 4. **Groups & Read-Only Sources** ✅: `groups` command, group filtering, read-only source discovery
 5. **Release** ✅: Documentation, GitHub Actions, Homebrew Cask
 
-**Not Planned:** `config` command (manual YAML editing is sufficient)
+**Not Planned:**
+- `config` command - Manual YAML editing is sufficient
+- `sync` command - Redundant with `inventory` + `push --dry-run` + groups
 
-**Deferred:** `sync` command, shell completions
+**Future Enhancement (if requested):** Shell completions (bash, zsh, fish)
