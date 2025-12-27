@@ -119,11 +119,11 @@ jobs:
           # Update Cask version
           sed -i "s/version \".*\"/version \"${VERSION}\"/" Casks/skset.rb
 
-          # Update Cask SHA256s
-          sed -i "0,/sha256 \".*\"/{s/sha256 \".*\"/sha256 \"${DARWIN_ARM64_SHA}\"/}" Casks/skset.rb
-          sed -i "0,/sha256 \".*\"/{s/sha256 \".*\"/sha256 \"${DARWIN_X64_SHA}\"/}" Casks/skset.rb
-          sed -i "0,/sha256 \".*\"/{s/sha256 \".*\"/sha256 \"${LINUX_X64_SHA}\"/}" Casks/skset.rb
-          sed -i "0,/sha256 \".*\"/{s/sha256 \".*\"/sha256 \"${LINUX_ARM64_SHA}\"/}" Casks/skset.rb
+          # Update Cask SHA256s with specific patterns for each platform
+          sed -i "/skset-darwin-arm64/,/sha256/ s/sha256 \".*\"/sha256 \"${DARWIN_ARM64_SHA}\"/" Casks/skset.rb
+          sed -i "/skset-darwin-x64/,/sha256/ s/sha256 \".*\"/sha256 \"${DARWIN_X64_SHA}\"/" Casks/skset.rb
+          sed -i "/skset-linux-x64/,/sha256/ s/sha256 \".*\"/sha256 \"${LINUX_X64_SHA}\"/" Casks/skset.rb
+          sed -i "/skset-linux-arm64/,/sha256/ s/sha256 \".*\"/sha256 \"${LINUX_ARM64_SHA}\"/" Casks/skset.rb
 
           # Update package.json version
           sed -i "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" package.json
