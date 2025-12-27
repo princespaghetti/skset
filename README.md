@@ -4,20 +4,9 @@ A CLI tool for managing LLM agent skills across multiple AI coding tools (Claude
 
 ## Installation
 
-**Homebrew** (coming soon):
-
 ```bash
 brew tap princespaghetti/skset https://github.com/princespaghetti/skset
 brew install skset
-```
-
-**From source**:
-
-```bash
-git clone https://github.com/princespaghetti/skset.git
-cd skset
-bun install
-bun run dev --help
 ```
 
 ## Quick Start
