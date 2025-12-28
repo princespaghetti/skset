@@ -13,6 +13,7 @@ import { expandHome, isInGitRepo } from '../utils/paths.ts';
 
 interface InventorySection {
   title: string;
+  path: string;
   skills: Skill[];
 }
 
@@ -76,6 +77,7 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
     const titleSuffix = options.group ? ` (group: ${options.group})` : '';
     sections.push({
       title: `Library (${librarySkills.length} skill${librarySkills.length !== 1 ? 's' : ''})${titleSuffix}`,
+      path: libraryPath,
       skills: librarySkills,
     });
 
@@ -106,6 +108,7 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
       const titleSuffix = options.group ? ` (group: ${options.group})` : '';
       sections.push({
         title: `${options.target} (${targetSkills.length} skill${targetSkills.length !== 1 ? 's' : ''})${titleSuffix}`,
+        path: targetPath,
         skills: targetSkills,
       });
     } else {
@@ -118,6 +121,7 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
 
         sections.push({
           title: `${targetName} Global (${targetSkills.length} skill${targetSkills.length !== 1 ? 's' : ''})`,
+          path: targetPath,
           skills: targetSkills,
         });
       }
@@ -134,6 +138,7 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
 
           sections.push({
             title: `${targetName} Repo (${repoSkills.length} skill${repoSkills.length !== 1 ? 's' : ''})`,
+            path: repoPath,
             skills: repoSkills,
           });
         }
@@ -142,7 +147,8 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
       // Read-only sources (e.g., plugin directories)
       if (config.sources) {
         for (const [sourceName, sourceConfig] of Object.entries(config.sources)) {
-          let sourceSkills = await listSkillsFromGlob(expandHome(sourceConfig.path), sourceName, sourceConfig.readonly);
+          const sourcePath = expandHome(sourceConfig.path);
+          let sourceSkills = await listSkillsFromGlob(sourcePath, sourceName, sourceConfig.readonly);
 
           // Filter by group if specified
           sourceSkills = filterSkillsByGroup(sourceSkills, options.group, groupSkills);
@@ -150,6 +156,7 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
           const readonlyLabel = sourceConfig.readonly ? ' (read-only)' : '';
           sections.push({
             title: `${sourceName}${readonlyLabel} (${sourceSkills.length} skill${sourceSkills.length !== 1 ? 's' : ''})`,
+            path: sourcePath,
             skills: sourceSkills,
           });
         }
@@ -168,6 +175,7 @@ function printSections(sections: InventorySection[], skillToGroupsMap: Map<strin
 
   for (const section of sections) {
     console.log(out.bold(section.title));
+    console.log(pc.dim(`  ${section.path}`));
 
     if (section.skills.length === 0) {
       console.log(pc.dim('  (empty)'));
