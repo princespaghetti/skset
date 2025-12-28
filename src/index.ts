@@ -5,16 +5,16 @@
  */
 
 import { Command } from 'commander';
-import { init } from './commands/init.ts';
-import { add } from './commands/add.ts';
-import { remove } from './commands/remove.ts';
-import { newSkill } from './commands/new.ts';
-import { validate } from './commands/validate.ts';
-import { inventory } from './commands/inventory.ts';
-import { push } from './commands/push.ts';
-import { pull } from './commands/pull.ts';
-import * as groups from './commands/groups.ts';
 import pkg from '../package.json' with { type: 'json' };
+import { add } from './commands/add.ts';
+import * as groups from './commands/groups.ts';
+import { init } from './commands/init.ts';
+import { inventory } from './commands/inventory.ts';
+import { newSkill } from './commands/new.ts';
+import { pull } from './commands/pull.ts';
+import { push } from './commands/push.ts';
+import { remove } from './commands/remove.ts';
+import { validate } from './commands/validate.ts';
 
 const program = new Command();
 
@@ -106,9 +106,7 @@ program
   });
 
 // skset groups
-const groupsCmd = program
-  .command('groups')
-  .description('Manage skill groups');
+const groupsCmd = program.command('groups').description('Manage skill groups');
 
 // Default action for bare `skset groups` = list
 groupsCmd.action(async () => {

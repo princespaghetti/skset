@@ -2,20 +2,20 @@
  * Manage skill groups
  */
 
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import {
-  loadConfig,
-  saveConfig,
-  getGroupNames,
-  getSkillsInGroup,
-  groupExists,
-  skillExistsInGroup,
+  addSkillToGroup,
   createGroup as createGroupInConfig,
   deleteGroup as deleteGroupInConfig,
-  addSkillToGroup,
-  removeSkillFromGroup,
+  getGroupNames,
   getLibraryPath,
+  getSkillsInGroup,
+  groupExists,
+  loadConfig,
+  removeSkillFromGroup,
+  saveConfig,
+  skillExistsInGroup,
 } from '../lib/config.ts';
 import { parseSkill } from '../lib/skills.ts';
 import * as out from '../utils/output.ts';

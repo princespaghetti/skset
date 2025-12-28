@@ -24,7 +24,7 @@ export async function getTargets(): Promise<Target[]> {
  */
 export async function getTarget(name: string): Promise<Target | null> {
   const targets = await getTargets();
-  return targets.find(t => t.name === name) || null;
+  return targets.find((t) => t.name === name) || null;
 }
 
 /**
@@ -66,10 +66,7 @@ export function getRepoPaths(config: Config): Map<string, string> {
  * @param useRepo - Whether to use repo paths instead of global
  * @returns Map of target name to resolved path
  */
-export async function resolveTargetPaths(
-  targetName?: string,
-  useRepo?: boolean
-): Promise<Map<string, string>> {
+export async function resolveTargetPaths(targetName?: string, useRepo?: boolean): Promise<Map<string, string>> {
   const config = await loadConfig();
 
   if (targetName) {

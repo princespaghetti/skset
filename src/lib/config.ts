@@ -2,10 +2,10 @@
  * Configuration management for skset
  */
 
-import { join } from 'node:path';
-import { homedir } from 'node:os';
 import { existsSync } from 'node:fs';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import YAML from 'yaml';
 import type { Config } from '../types/index.ts';
 import { expandHome } from '../utils/paths.ts';
@@ -35,18 +35,18 @@ export function getDefaultConfig(): Config {
         global: '~/.claude/skills',
         repo: '.claude/skills',
       },
-      'opencode': {
+      opencode: {
         global: '~/.opencode/skill',
         repo: '.opencode/skill',
       },
-      'codex': {
+      codex: {
         global: '~/.codex/skills',
         repo: '.codex/skills',
       },
-      'copilot': {
+      copilot: {
         repo: '.github/skills',
       },
-      'amp': {
+      amp: {
         global: '~/.config/agents/skills',
         repo: '.agents/skills',
       },
@@ -69,13 +69,14 @@ export function getDefaultConfig(): Config {
  */
 export async function loadConfig(): Promise<Config> {
   const configPath = getConfigPath();
+  const configFile = Bun.file(configPath);
 
-  if (!existsSync(configPath)) {
+  if (!(await configFile.exists())) {
     return getDefaultConfig();
   }
 
   try {
-    const content = await readFile(configPath, 'utf-8');
+    const content = await configFile.text();
     const config = YAML.parse(content) as Config;
     return config;
   } catch (err) {
@@ -97,7 +98,7 @@ export async function saveConfig(config: Config): Promise<void> {
 
   try {
     const content = YAML.stringify(config);
-    await writeFile(configPath, content, 'utf-8');
+    await Bun.write(configPath, content);
   } catch (err) {
     throw new Error(`Failed to write config file: ${(err as Error).message}`);
   }
@@ -114,8 +115,8 @@ export async function getLibraryPath(): Promise<string> {
 /**
  * Check if skset is initialized (config exists)
  */
-export function isInitialized(): boolean {
-  return existsSync(getConfigPath());
+export async function isInitialized(): Promise<boolean> {
+  return await Bun.file(getConfigPath()).exists();
 }
 
 /**
@@ -166,9 +167,7 @@ export function removeSkillFromGroup(config: Config, groupName: string, skillNam
   const updatedConfig = { ...config };
 
   if (updatedConfig.groups[groupName]) {
-    updatedConfig.groups[groupName] = updatedConfig.groups[groupName].filter(
-      (name) => name !== skillName
-    );
+    updatedConfig.groups[groupName] = updatedConfig.groups[groupName].filter((name) => name !== skillName);
   }
 
   return updatedConfig;
@@ -181,9 +180,7 @@ export function removeSkillFromAllGroups(config: Config, skillName: string): Con
   const updatedConfig = { ...config };
 
   for (const groupName of Object.keys(updatedConfig.groups)) {
-    updatedConfig.groups[groupName] = updatedConfig.groups[groupName].filter(
-      (name) => name !== skillName
-    );
+    updatedConfig.groups[groupName] = updatedConfig.groups[groupName].filter((name) => name !== skillName);
   }
 
   return updatedConfig;
@@ -233,7 +230,7 @@ export function getSkillToGroupsMap(config: Config): Map<string, string[]> {
       if (!map.has(skillName)) {
         map.set(skillName, []);
       }
-      map.get(skillName)!.push(groupName);
+      map.get(skillName)?.push(groupName);
     }
   }
 

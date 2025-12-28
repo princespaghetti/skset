@@ -2,13 +2,13 @@
  * Add a skill to the library
  */
 
-import { join, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { confirm } from '@clack/prompts';
-import type { AddOptions } from '../types/index.ts';
-import { getLibraryPath, loadConfig, saveConfig, addSkillToGroup } from '../lib/config.ts';
-import { parseSkill, validateSkill } from '../lib/skills.ts';
+import { addSkillToGroup, getLibraryPath, loadConfig, saveConfig } from '../lib/config.ts';
 import { copyDirectory, skillExists } from '../lib/copy.ts';
+import { parseSkill, validateSkill } from '../lib/skills.ts';
+import type { AddOptions } from '../types/index.ts';
 import * as out from '../utils/output.ts';
 
 /**
@@ -57,7 +57,7 @@ export async function add(skillPath: string, options: AddOptions = {}): Promise<
     const libraryPath = await getLibraryPath();
     const destPath = join(libraryPath, skill.name);
 
-    if (skillExists(destPath)) {
+    if (await skillExists(destPath)) {
       const shouldOverwrite = await confirm({
         message: `Skill "${skill.name}" already exists in library. Overwrite?`,
         initialValue: false,

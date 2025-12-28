@@ -189,6 +189,29 @@ Read-only sources (e.g., marketplace plugins) are automatically discovered in in
 - **Prompts**: `@clack/prompts` for interactive confirmations
 - **Parsing**: `yaml` for config, `gray-matter` for SKILL.md frontmatter
 - **Output**: `picocolors` for colors, `cli-table3` for tables
+- **Linting**: Biome for code formatting and linting
+
+## Code Style
+
+- Use ES modules (`import`/`export`), never CommonJS (`require`)
+- Prefer `const` over `let`; avoid `var`
+- Use async/await over raw Promises where possible
+- Prefer Bun-native APIs over Node.js equivalents:
+  - `Bun.file(path).text()` instead of `readFile(path, 'utf-8')`
+  - `Bun.write(path, data)` instead of `writeFile(path, data)`
+  - `await Bun.file(path).exists()` instead of `existsSync(path)`
+- Use template literals for string concatenation
+- Follow Biome's linting recommendations
+- Run `bun lint` before committing
+- Run `bun format` to auto-format code
+- Run `bun check` to lint and format in one command
+
+## Git Workflow
+
+- **Branch naming**: `feature/<name>`, `fix/<name>`, `chore/<name>`
+- **Commit messages**: Use imperative mood (e.g., "Add feature" not "Added feature"), max 72 chars for subject line
+- **Pull requests**: Squash merge preferred, delete branch after merge
+- **Before pushing**: Always run tests (`bun test`) and linting (`bun check`)
 
 ## Distribution
 

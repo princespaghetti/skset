@@ -2,10 +2,10 @@
  * Scaffold a new skill
  */
 
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { text, confirm } from '@clack/prompts';
+import { join } from 'node:path';
+import { text } from '@clack/prompts';
 import { getLibraryPath } from '../lib/config.ts';
 import * as out from '../utils/output.ts';
 
@@ -103,7 +103,10 @@ name: ${name}
 description: ${description}
 ---
 
-# ${name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+# ${name
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')}
 
 ## Overview
 

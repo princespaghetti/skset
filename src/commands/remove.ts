@@ -2,21 +2,21 @@
  * Remove a skill from the library
  */
 
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
+import { join } from 'node:path';
 import { confirm } from '@clack/prompts';
-import type { RemoveOptions } from '../types/index.ts';
 import {
   getLibraryPath,
-  loadConfig,
-  saveConfig,
-  removeSkillFromGroup,
-  removeSkillFromAllGroups,
   groupExists,
+  loadConfig,
+  removeSkillFromAllGroups,
+  removeSkillFromGroup,
+  saveConfig,
   skillExistsInGroup,
 } from '../lib/config.ts';
 import { parseSkill } from '../lib/skills.ts';
+import type { RemoveOptions } from '../types/index.ts';
 import * as out from '../utils/output.ts';
 
 /**

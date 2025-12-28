@@ -2,21 +2,18 @@
  * Validate skills against Agent Skills specification
  */
 
-import { join, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { ValidateOptions } from '../types/index.ts';
-import { getLibraryPath } from '../lib/config.ts';
-import { parseSkill, validateSkill, listSkills } from '../lib/skills.ts';
-import * as out from '../utils/output.ts';
+import { join, resolve } from 'node:path';
 import pc from 'picocolors';
+import { getLibraryPath } from '../lib/config.ts';
+import { listSkills, parseSkill, validateSkill } from '../lib/skills.ts';
+import type { ValidateOptions } from '../types/index.ts';
+import * as out from '../utils/output.ts';
 
 /**
  * Validate a skill
  */
-export async function validate(
-  skillNameOrPath?: string,
-  options: ValidateOptions = {}
-): Promise<void> {
+export async function validate(skillNameOrPath?: string, options: ValidateOptions = {}): Promise<void> {
   try {
     if (options.all) {
       // Validate all library skills
@@ -49,10 +46,7 @@ async function validateSingleSkill(skillNameOrPath: string): Promise<void> {
     skillPath = join(libraryPath, skillNameOrPath);
 
     if (!existsSync(skillPath)) {
-      out.error(
-        `Skill "${skillNameOrPath}" not found`,
-        'Specify a valid skill directory path or name from library'
-      );
+      out.error(`Skill "${skillNameOrPath}" not found`, 'Specify a valid skill directory path or name from library');
       process.exit(2);
     }
   }
@@ -91,9 +85,7 @@ async function validateSingleSkill(skillNameOrPath: string): Promise<void> {
   }
 
   if (result.lineCount) {
-    console.log(
-      out.dim(`Lines: ${result.lineCount} | Tokens: ~${result.estimatedTokens}`)
-    );
+    console.log(out.dim(`Lines: ${result.lineCount} | Tokens: ~${result.estimatedTokens}`));
   }
 
   if (!result.valid) {
@@ -130,10 +122,10 @@ async function validateAllSkills(): Promise<void> {
 
     if (result.valid) {
       validCount++;
-      console.log(pc.green('✓') + ` ${skill.name}`);
+      console.log(`${pc.green('✓')} ${skill.name}`);
     } else {
       invalidCount++;
-      console.log(pc.red('✗') + ` ${skill.name}`);
+      console.log(`${pc.red('✗')} ${skill.name}`);
       for (const error of result.errors) {
         console.log(pc.red(`    ${error}`));
       }

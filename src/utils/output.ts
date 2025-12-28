@@ -13,7 +13,7 @@ export const colorsEnabled = !process.env.NO_COLOR;
  * Print a success message
  */
 export function success(message: string): void {
-  console.log(colorsEnabled ? pc.green('✓') + ' ' + message : '✓ ' + message);
+  console.log(colorsEnabled ? `${pc.green('✓')} ${message}` : `✓ ${message}`);
 }
 
 /**

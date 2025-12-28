@@ -2,9 +2,9 @@
  * Path resolution utilities for skset
  */
 
-import { homedir } from 'node:os';
-import { join, resolve, dirname } from 'node:path';
 import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 
 /**
  * Expand ~ to the user's home directory

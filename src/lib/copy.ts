@@ -2,10 +2,9 @@
  * File and directory copy operations with conflict detection
  */
 
-import { join, relative } from 'node:path';
 import { existsSync, statSync } from 'node:fs';
-import { readdir, copyFile, mkdir, readFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
+import { mkdir, readdir } from 'node:fs/promises';
+import { join, relative } from 'node:path';
 
 /**
  * Copy result information
@@ -25,10 +24,7 @@ export interface CopyResult {
  * @param dest - Destination directory path
  * @returns Copy result
  */
-export async function copyDirectory(
-  src: string,
-  dest: string
-): Promise<CopyResult> {
+export async function copyDirectory(src: string, dest: string): Promise<CopyResult> {
   const filesCopied: string[] = [];
 
   try {
@@ -54,7 +50,7 @@ export async function copyDirectory(
       } else if (entry.isFile()) {
         // Copy file
         await mkdir(dest, { recursive: true });
-        await copyFile(srcPath, destPath);
+        await Bun.write(destPath, Bun.file(srcPath));
         filesCopied.push(relative(dest, destPath));
       }
     }
@@ -80,7 +76,10 @@ export async function directoriesMatch(dir1: string, dir2: string): Promise<bool
   const skillFile1 = join(dir1, 'SKILL.md');
   const skillFile2 = join(dir2, 'SKILL.md');
 
-  if (!existsSync(skillFile1) || !existsSync(skillFile2)) {
+  const exists1 = await Bun.file(skillFile1).exists();
+  const exists2 = await Bun.file(skillFile2).exists();
+
+  if (!exists1 || !exists2) {
     return false;
   }
 
@@ -97,14 +96,16 @@ export async function directoriesMatch(dir1: string, dir2: string): Promise<bool
  * Get SHA-256 hash of a file
  */
 async function getFileHash(filePath: string): Promise<string> {
-  const content = await readFile(filePath);
-  return createHash('sha256').update(content).digest('hex');
+  const file = Bun.file(filePath);
+  const hasher = new Bun.CryptoHasher('sha256');
+  hasher.update(await file.arrayBuffer());
+  return hasher.digest('hex');
 }
 
 /**
  * Check if a skill directory exists and has content
  */
-export function skillExists(dirPath: string): boolean {
+export async function skillExists(dirPath: string): Promise<boolean> {
   if (!existsSync(dirPath)) {
     return false;
   }

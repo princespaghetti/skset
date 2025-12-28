@@ -104,13 +104,13 @@ describe('skillExists', () => {
     const skillDir = join(tempDir, 'skill');
     await mkdir(skillDir);
 
-    const exists = skillExists(skillDir);
+    const exists = await skillExists(skillDir);
 
     expect(exists).toBe(true);
   });
 
-  it('should return false for non-existent directory', () => {
-    const exists = skillExists(join(tempDir, 'nonexistent'));
+  it('should return false for non-existent directory', async () => {
+    const exists = await skillExists(join(tempDir, 'nonexistent'));
 
     expect(exists).toBe(false);
   });
@@ -119,7 +119,7 @@ describe('skillExists', () => {
     const filePath = join(tempDir, 'file.txt');
     await writeFile(filePath, 'content');
 
-    const exists = skillExists(filePath);
+    const exists = await skillExists(filePath);
 
     expect(exists).toBe(false);
   });

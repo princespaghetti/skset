@@ -2,9 +2,9 @@
  * Skill parsing and validation logic
  */
 
-import { basename, join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import matter from 'gray-matter';
 import type { Skill, ValidationResult } from '../types/index.ts';
 
@@ -32,7 +32,7 @@ export async function parseSkill(
   const skillPath = join(dirPath, skillFile);
 
   try {
-    const content = await readFile(skillPath, 'utf-8');
+    const content = await Bun.file(skillPath).text();
     const { data } = matter(content);
 
     // Handle allowed-tools: can be array (YAML format) or string (space-delimited)
@@ -74,7 +74,7 @@ async function findSkillFile(dirPath: string): Promise<string | null> {
 
   try {
     const files = await readdir(dirPath);
-    const skillFile = files.find(f => f.toLowerCase() === 'skill.md');
+    const skillFile = files.find((f) => f.toLowerCase() === 'skill.md');
     return skillFile || null;
   } catch {
     return null;
@@ -112,9 +112,7 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
     // Name should match directory name
     const dirName = basename(skill.path);
     if (skill.name !== dirName) {
-      errors.push(
-        `name "${skill.name}" does not match directory name "${dirName}"`
-      );
+      errors.push(`name "${skill.name}" does not match directory name "${dirName}"`);
     }
   }
 
@@ -144,7 +142,7 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
   const skillFile = await findSkillFile(skill.path);
   if (skillFile) {
     const skillPath = join(skill.path, skillFile);
-    const content = await readFile(skillPath, 'utf-8');
+    const content = await Bun.file(skillPath).text();
     const lines = content.split('\n');
     const lineCount = lines.length;
 
@@ -156,9 +154,7 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
     }
 
     if (estimatedTokens > 5000) {
-      warnings.push(
-        `SKILL.md has ~${estimatedTokens} tokens (recommended: ≤5000)`
-      );
+      warnings.push(`SKILL.md has ~${estimatedTokens} tokens (recommended: ≤5000)`);
     }
 
     return {
@@ -211,7 +207,7 @@ export async function listSkills(
     }
 
     return skills;
-  } catch (err) {
+  } catch (_err) {
     return [];
   }
 }
@@ -223,11 +219,7 @@ export async function listSkills(
  * @param readonly - Whether this source is read-only
  * @returns Array of parsed skills from all matching directories
  */
-export async function listSkillsFromGlob(
-  globPattern: string,
-  sourceName: string,
-  readonly: boolean
-): Promise<Skill[]> {
+export async function listSkillsFromGlob(globPattern: string, sourceName: string, readonly: boolean): Promise<Skill[]> {
   try {
     const { Glob } = await import('bun');
     const glob = new Glob(globPattern);
@@ -242,7 +234,7 @@ export async function listSkillsFromGlob(
     }
 
     return allSkills;
-  } catch (err) {
+  } catch (_err) {
     // If glob fails, return empty array
     return [];
   }

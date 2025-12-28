@@ -2,15 +2,15 @@
  * Pull skills from targets into library
  */
 
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { confirm } from '@clack/prompts';
 import { getLibraryPath, loadConfig } from '../lib/config.ts';
-import { parseSkill, listSkills } from '../lib/skills.ts';
-import { copyDirectory, skillExists, directoriesMatch } from '../lib/copy.ts';
+import { copyDirectory, directoriesMatch, skillExists } from '../lib/copy.ts';
+import { listSkills, parseSkill } from '../lib/skills.ts';
 import { getGlobalPaths, getRepoPaths, getTarget } from '../lib/targets.ts';
-import { isInGitRepo } from '../utils/paths.ts';
 import * as out from '../utils/output.ts';
+import { isInGitRepo } from '../utils/paths.ts';
 
 interface PullOptions {
   target?: string;
@@ -22,10 +22,7 @@ interface PullOptions {
 /**
  * Pull skills from targets into library
  */
-export async function pull(
-  skillName?: string,
-  options: PullOptions = {}
-): Promise<void> {
+export async function pull(skillName?: string, options: PullOptions = {}): Promise<void> {
   try {
     const libraryPath = await getLibraryPath();
 
@@ -53,11 +50,7 @@ export async function pull(
 /**
  * Pull a single skill by name
  */
-async function pullSingle(
-  skillName: string,
-  libraryPath: string,
-  options: PullOptions
-): Promise<void> {
+async function pullSingle(skillName: string, libraryPath: string, options: PullOptions): Promise<void> {
   // Determine source paths to search
   const sourcePaths = await getSourcePaths(options);
 
@@ -92,7 +85,7 @@ async function pullSingle(
   const destPath = join(libraryPath, skillName);
 
   // Check if already exists
-  if (skillExists(destPath)) {
+  if (await skillExists(destPath)) {
     const isSame = await directoriesMatch(foundPath, destPath);
 
     if (isSame) {
@@ -151,7 +144,7 @@ async function pullAll(libraryPath: string, options: PullOptions): Promise<void>
       const destPath = join(libraryPath, skill.name);
 
       // Check if already exists
-      if (skillExists(destPath)) {
+      if (await skillExists(destPath)) {
         const isSame = await directoriesMatch(sourcePath, destPath);
 
         if (isSame) {
@@ -206,9 +199,7 @@ async function getSourcePaths(options: PullOptions): Promise<Map<string, string>
       throw new Error(`Target "${options.target}" not found in config`);
     }
 
-    const path = options.fromRepo
-      ? target.repo
-      : target.global;
+    const path = options.fromRepo ? target.repo : target.global;
 
     if (!path) {
       const type = options.fromRepo ? 'repo' : 'global';

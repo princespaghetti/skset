@@ -72,7 +72,7 @@ export interface Group {
 export interface Source {
   /** Source name (e.g., 'claude-plugins') */
   name: string;
-  /** Path to skills (supports glob patterns, e.g., ~/.claude/plugins/*/*/skills) */
+  /** Path to skills (supports glob patterns) */
   path: string;
   /** Whether this source is read-only (prevents push operations) */
   readonly: boolean;

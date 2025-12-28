@@ -4,21 +4,16 @@
 
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import {
-  getConfigPath,
-  getDefaultConfig,
-  saveConfig,
-  isInitialized,
-} from '../lib/config.ts';
-import { expandHome } from '../utils/paths.ts';
+import { getConfigPath, getDefaultConfig, isInitialized, saveConfig } from '../lib/config.ts';
 import * as out from '../utils/output.ts';
+import { expandHome } from '../utils/paths.ts';
 
 /**
  * Initialize skset
  */
 export async function init(): Promise<void> {
   try {
-    if (isInitialized()) {
+    if (await isInitialized()) {
       out.warning('skset is already initialized');
       out.info(`Config file: ${getConfigPath()}`);
       return;

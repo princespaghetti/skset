@@ -2,14 +2,14 @@
  * Push skills from library to targets
  */
 
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { confirm } from '@clack/prompts';
-import type { PushOptions } from '../types/index.ts';
-import { getLibraryPath, loadConfig, getSkillsInGroup, groupExists } from '../lib/config.ts';
+import { getLibraryPath, getSkillsInGroup, groupExists, loadConfig } from '../lib/config.ts';
+import { copyDirectory, directoriesMatch, skillExists } from '../lib/copy.ts';
 import { listSkills, parseSkill } from '../lib/skills.ts';
-import { copyDirectory, skillExists, directoriesMatch } from '../lib/copy.ts';
 import { resolveTargetPaths } from '../lib/targets.ts';
+import type { PushOptions } from '../types/index.ts';
 import * as out from '../utils/output.ts';
 
 /**
@@ -17,10 +17,7 @@ import * as out from '../utils/output.ts';
  * Note: Read-only sources (configured in config.sources) are never used as push targets.
  * They are only for skill discovery in inventory commands.
  */
-export async function push(
-  skillName?: string,
-  options: PushOptions = {}
-): Promise<void> {
+export async function push(skillName?: string, options: PushOptions = {}): Promise<void> {
   try {
     const libraryPath = await getLibraryPath();
 
@@ -78,7 +75,7 @@ export async function push(
         const destPath = join(targetPath, skillName);
 
         // Check for conflicts
-        if (skillExists(destPath)) {
+        if (await skillExists(destPath)) {
           const isSame = await directoriesMatch(skillPath, destPath);
 
           if (isSame) {
@@ -117,9 +114,7 @@ export async function push(
     // Summary
     if (totalPushed > 0 || totalSkipped > 0) {
       console.log('');
-      console.log(
-        out.dim(`Pushed: ${totalPushed} | Skipped: ${totalSkipped}`)
-      );
+      console.log(out.dim(`Pushed: ${totalPushed} | Skipped: ${totalSkipped}`));
     }
   } catch (err) {
     out.error('Failed to push skills', (err as Error).message);
@@ -156,7 +151,7 @@ async function getSkillsToPush(
   } else if (options.all) {
     // Push all skills
     const skills = await listSkills(libraryPath);
-    return skills.map(s => s.name);
+    return skills.map((s) => s.name);
   } else if (skillName) {
     // Push single skill
     const skillPath = join(libraryPath, skillName);
