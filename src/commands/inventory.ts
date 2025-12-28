@@ -8,6 +8,7 @@ import { getLibraryPath, getSkillsInGroup, getSkillToGroupsMap, groupExists, loa
 import { listSkills, listSkillsFromGlob } from '../lib/skills.ts';
 import { getGlobalPaths, getRepoPaths } from '../lib/targets.ts';
 import type { InventoryOptions, Skill } from '../types/index.ts';
+import { ConfigError, GroupNotFoundError } from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
 import { expandHome, isInGitRepo } from '../utils/paths.ts';
 
@@ -21,25 +22,18 @@ interface InventorySection {
  * Show inventory of skills
  */
 export async function inventory(options: InventoryOptions = {}): Promise<void> {
-  try {
-    // Validate group if specified
-    if (options.group) {
-      const config = await loadConfig();
-      if (!groupExists(config, options.group)) {
-        out.error(`Group "${options.group}" does not exist`);
-        out.info('Run "skset groups list" to see available groups');
-        process.exit(1);
-      }
+  // Validate group if specified
+  if (options.group) {
+    const config = await loadConfig();
+    if (!groupExists(config, options.group)) {
+      throw new GroupNotFoundError(options.group);
     }
+  }
 
-    if (options.json) {
-      await inventoryJSON(options);
-    } else {
-      await inventoryText(options);
-    }
-  } catch (err) {
-    out.error('Failed to inventory skills', (err as Error).message);
-    process.exit(1);
+  if (options.json) {
+    await inventoryJSON(options);
+  } else {
+    await inventoryText(options);
   }
 }
 
@@ -96,8 +90,7 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
       // Specific target only
       const targetPath = globalPaths.get(options.target);
       if (!targetPath) {
-        out.error(`Target "${options.target}" not found in config`);
-        process.exit(1);
+        throw new ConfigError(`Target "${options.target}" not found in config`);
       }
 
       let targetSkills = existsSync(targetPath) ? await listSkills(targetPath, 'target', options.target) : [];
@@ -228,8 +221,7 @@ async function inventoryJSON(options: InventoryOptions): Promise<void> {
     if (options.target) {
       const targetPath = globalPaths.get(options.target);
       if (!targetPath) {
-        out.error(`Target "${options.target}" not found in config`);
-        process.exit(1);
+        throw new ConfigError(`Target "${options.target}" not found in config`);
       }
 
       let targetSkills = existsSync(targetPath) ? await listSkills(targetPath, 'target', options.target) : [];

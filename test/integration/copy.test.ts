@@ -97,6 +97,232 @@ describe('directoriesMatch', () => {
 
     expect(match).toBe(false);
   });
+
+  describe('Recursive directory hashing', () => {
+    it('should return true for identical skills with scripts/', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'scripts'), { recursive: true });
+      await mkdir(join(dir2, 'scripts'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'scripts', 'helper.py'), 'print("hello")');
+      await writeFile(join(dir2, 'scripts', 'helper.py'), 'print("hello")');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(true);
+    });
+
+    it('should return false when scripts/ content differs', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'scripts'), { recursive: true });
+      await mkdir(join(dir2, 'scripts'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'scripts', 'helper.py'), 'print("hello")');
+      await writeFile(join(dir2, 'scripts', 'helper.py'), 'print("goodbye")');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(false);
+    });
+
+    it('should return false when scripts/ has different files', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'scripts'), { recursive: true });
+      await mkdir(join(dir2, 'scripts'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'scripts', 'helper.py'), 'print("hello")');
+      await writeFile(join(dir2, 'scripts', 'different.py'), 'print("hello")');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(false);
+    });
+
+    it('should return false when only one has scripts/', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'scripts'), { recursive: true });
+      await mkdir(dir2);
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'scripts', 'helper.py'), 'print("hello")');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(false);
+    });
+
+    it('should return true for identical skills with references/', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'references'), { recursive: true });
+      await mkdir(join(dir2, 'references'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'references', 'api.json'), '{"key": "value"}');
+      await writeFile(join(dir2, 'references', 'api.json'), '{"key": "value"}');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(true);
+    });
+
+    it('should return false when references/ content differs', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'references'), { recursive: true });
+      await mkdir(join(dir2, 'references'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'references', 'api.json'), '{"key": "value1"}');
+      await writeFile(join(dir2, 'references', 'api.json'), '{"key": "value2"}');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(false);
+    });
+
+    it('should return true for identical skills with assets/', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'assets'), { recursive: true });
+      await mkdir(join(dir2, 'assets'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'assets', 'logo.png'), 'fake png data');
+      await writeFile(join(dir2, 'assets', 'logo.png'), 'fake png data');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(true);
+    });
+
+    it('should return false when assets/ content differs', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'assets'), { recursive: true });
+      await mkdir(join(dir2, 'assets'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'assets', 'logo.png'), 'fake png data 1');
+      await writeFile(join(dir2, 'assets', 'logo.png'), 'fake png data 2');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(false);
+    });
+
+    it('should return true for identical skills with all subdirectories', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'scripts'), { recursive: true });
+      await mkdir(join(dir1, 'references'), { recursive: true });
+      await mkdir(join(dir1, 'assets'), { recursive: true });
+      await mkdir(join(dir2, 'scripts'), { recursive: true });
+      await mkdir(join(dir2, 'references'), { recursive: true });
+      await mkdir(join(dir2, 'assets'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+
+      await writeFile(join(dir1, 'scripts', 'helper.py'), 'script');
+      await writeFile(join(dir2, 'scripts', 'helper.py'), 'script');
+
+      await writeFile(join(dir1, 'references', 'api.json'), 'ref');
+      await writeFile(join(dir2, 'references', 'api.json'), 'ref');
+
+      await writeFile(join(dir1, 'assets', 'logo.png'), 'asset');
+      await writeFile(join(dir2, 'assets', 'logo.png'), 'asset');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(true);
+    });
+
+    it('should return false when any subdirectory differs', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'scripts'), { recursive: true });
+      await mkdir(join(dir1, 'references'), { recursive: true });
+      await mkdir(join(dir1, 'assets'), { recursive: true });
+      await mkdir(join(dir2, 'scripts'), { recursive: true });
+      await mkdir(join(dir2, 'references'), { recursive: true });
+      await mkdir(join(dir2, 'assets'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+
+      await writeFile(join(dir1, 'scripts', 'helper.py'), 'script');
+      await writeFile(join(dir2, 'scripts', 'helper.py'), 'script');
+
+      // Different content in references/
+      await writeFile(join(dir1, 'references', 'api.json'), 'ref1');
+      await writeFile(join(dir2, 'references', 'api.json'), 'ref2');
+
+      await writeFile(join(dir1, 'assets', 'logo.png'), 'asset');
+      await writeFile(join(dir2, 'assets', 'logo.png'), 'asset');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(false);
+    });
+
+    it('should return true when both have empty subdirectories', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'scripts'), { recursive: true });
+      await mkdir(join(dir2, 'scripts'), { recursive: true });
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      expect(match).toBe(true);
+    });
+
+    it('should ignore non-standard subdirectories', async () => {
+      const dir1 = join(tempDir, 'skill1');
+      const dir2 = join(tempDir, 'skill2');
+
+      await mkdir(join(dir1, 'custom'), { recursive: true });
+      await mkdir(dir2);
+
+      await writeFile(join(dir1, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir2, 'SKILL.md'), 'same skill');
+      await writeFile(join(dir1, 'custom', 'file.txt'), 'ignored');
+
+      const match = await directoriesMatch(dir1, dir2);
+
+      // Non-standard directories are included in the hash, so this should be false
+      expect(match).toBe(false);
+    });
+  });
 });
 
 describe('skillExists', () => {

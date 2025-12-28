@@ -8,26 +8,21 @@ import pc from 'picocolors';
 import { getLibraryPath } from '../lib/config.ts';
 import { listSkills, parseSkill, validateSkill } from '../lib/skills.ts';
 import type { ValidateOptions } from '../types/index.ts';
+import { SkillNotFoundError, SksetError, ValidationError } from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
 
 /**
  * Validate a skill
  */
 export async function validate(skillNameOrPath?: string, options: ValidateOptions = {}): Promise<void> {
-  try {
-    if (options.all) {
-      // Validate all library skills
-      await validateAllSkills();
-    } else if (skillNameOrPath) {
-      // Validate single skill
-      await validateSingleSkill(skillNameOrPath);
-    } else {
-      out.error('Please specify a skill name/path or use --all');
-      process.exit(1);
-    }
-  } catch (err) {
-    out.error('Validation failed', (err as Error).message);
-    process.exit(1);
+  if (options.all) {
+    // Validate all library skills
+    await validateAllSkills();
+  } else if (skillNameOrPath) {
+    // Validate single skill
+    await validateSingleSkill(skillNameOrPath);
+  } else {
+    throw new SksetError('Please specify a skill name/path or use --all');
   }
 }
 
@@ -46,16 +41,14 @@ async function validateSingleSkill(skillNameOrPath: string): Promise<void> {
     skillPath = join(libraryPath, skillNameOrPath);
 
     if (!existsSync(skillPath)) {
-      out.error(`Skill "${skillNameOrPath}" not found`, 'Specify a valid skill directory path or name from library');
-      process.exit(2);
+      throw new SkillNotFoundError(skillNameOrPath, 'Specify a valid skill directory path or name from library');
     }
   }
 
   const skill = await parseSkill(skillPath);
 
   if (!skill) {
-    out.error('SKILL.md not found in directory', skillPath);
-    process.exit(2);
+    throw new ValidationError('SKILL.md not found in directory', skillPath);
   }
 
   const result = await validateSkill(skill);
@@ -63,7 +56,7 @@ async function validateSingleSkill(skillNameOrPath: string): Promise<void> {
   // Print results
   console.log('');
   console.log(out.bold(`Validating: ${skill.name}`));
-  console.log(out.dim(`Path: ${skillPath}`));
+  out.dim(`Path: ${skillPath}`);
   console.log('');
 
   if (result.errors.length > 0) {
@@ -85,11 +78,11 @@ async function validateSingleSkill(skillNameOrPath: string): Promise<void> {
   }
 
   if (result.lineCount) {
-    console.log(out.dim(`Lines: ${result.lineCount} | Tokens: ~${result.estimatedTokens}`));
+    out.dim(`Lines: ${result.lineCount} | Tokens: ~${result.estimatedTokens}`);
   }
 
   if (!result.valid) {
-    process.exit(2);
+    throw new ValidationError('Skill validation failed');
   }
 }
 
@@ -100,8 +93,7 @@ async function validateAllSkills(): Promise<void> {
   const libraryPath = await getLibraryPath();
 
   if (!existsSync(libraryPath)) {
-    out.error('Library not found', `Run "skset init" first`);
-    process.exit(1);
+    throw new SksetError('Library not found', 'Run "skset init" first');
   }
 
   const skills = await listSkills(libraryPath);
@@ -142,6 +134,6 @@ async function validateAllSkills(): Promise<void> {
   console.log(`Valid: ${validCount} | Invalid: ${invalidCount}`);
 
   if (invalidCount > 0) {
-    process.exit(2);
+    throw new ValidationError(`${invalidCount} skill${invalidCount === 1 ? '' : 's'} failed validation`);
   }
 }

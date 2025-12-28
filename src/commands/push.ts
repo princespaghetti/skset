@@ -10,6 +10,7 @@ import { copyDirectory, directoriesMatch, skillExists } from '../lib/copy.ts';
 import { listSkills, parseSkill } from '../lib/skills.ts';
 import { resolveTargetPaths } from '../lib/targets.ts';
 import type { PushOptions } from '../types/index.ts';
+import { ConfigError, GroupNotFoundError, SkillNotFoundError, SksetError } from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
 
 /**
@@ -18,107 +19,98 @@ import * as out from '../utils/output.ts';
  * They are only for skill discovery in inventory commands.
  */
 export async function push(skillName?: string, options: PushOptions = {}): Promise<void> {
-  try {
-    const libraryPath = await getLibraryPath();
+  const libraryPath = await getLibraryPath();
 
-    if (!existsSync(libraryPath)) {
-      out.error('Library not found', 'Run "skset init" first');
-      process.exit(1);
+  if (!existsSync(libraryPath)) {
+    throw new ConfigError('Library not found', 'Run "skset init" first');
+  }
+
+  // Determine which skills to push
+  const skillsToPush = await getSkillsToPush(libraryPath, skillName, options);
+
+  if (skillsToPush.length === 0) {
+    if (options.all) {
+      out.info('No skills in library to push');
+    } else if (skillName) {
+      throw new SkillNotFoundError(skillName);
     }
+    return;
+  }
 
-    // Determine which skills to push
-    const skillsToPush = await getSkillsToPush(libraryPath, skillName, options);
+  // Resolve target paths
+  const targetPaths = await resolveTargetPaths(options.target, options.repo);
 
-    if (skillsToPush.length === 0) {
-      if (options.all) {
-        out.info('No skills in library to push');
-      } else if (skillName) {
-        out.error(`Skill "${skillName}" not found in library`);
-        process.exit(1);
-      }
-      return;
-    }
+  if (targetPaths.size === 0) {
+    throw new ConfigError('No targets configured');
+  }
 
-    // Resolve target paths
-    const targetPaths = await resolveTargetPaths(options.target, options.repo);
-
-    if (targetPaths.size === 0) {
-      out.error('No targets configured');
-      process.exit(1);
-    }
-
-    // Dry run
-    if (options.dryRun) {
-      console.log('');
-      console.log(out.bold('Dry run - would push:'));
-      console.log('');
-
-      for (const skillName of skillsToPush) {
-        console.log(out.highlight(`  ${skillName}`));
-        for (const [targetName] of targetPaths) {
-          console.log(out.dim(`    → ${targetName}`));
-        }
-      }
-
-      console.log('');
-      return;
-    }
-
-    // Push each skill to each target
-    let totalPushed = 0;
-    let totalSkipped = 0;
+  // Dry run
+  if (options.dryRun) {
+    console.log('');
+    console.log(out.bold('Dry run - would push:'));
+    console.log('');
 
     for (const skillName of skillsToPush) {
-      const skillPath = join(libraryPath, skillName);
+      console.log(out.highlight(`  ${skillName}`));
+      for (const [targetName] of targetPaths) {
+        console.log(out.dim(`    → ${targetName}`));
+      }
+    }
 
-      for (const [targetName, targetPath] of targetPaths) {
-        const destPath = join(targetPath, skillName);
+    console.log('');
+    return;
+  }
 
-        // Check for conflicts
-        if (await skillExists(destPath)) {
-          const isSame = await directoriesMatch(skillPath, destPath);
+  // Push each skill to each target
+  let totalPushed = 0;
+  let totalSkipped = 0;
 
-          if (isSame) {
-            // Skip if identical
-            totalSkipped++;
-            continue;
-          }
+  for (const skillName of skillsToPush) {
+    const skillPath = join(libraryPath, skillName);
 
-          // Prompt if different and not forcing
-          if (!options.force) {
-            const shouldOverwrite = await confirm({
-              message: `Overwrite "${skillName}" in ${targetName}?`,
-              initialValue: false,
-            });
+    for (const [targetName, targetPath] of targetPaths) {
+      const destPath = join(targetPath, skillName);
 
-            if (!shouldOverwrite) {
-              totalSkipped++;
-              continue;
-            }
-          }
-        }
+      // Check for conflicts
+      if (await skillExists(destPath)) {
+        const isSame = await directoriesMatch(skillPath, destPath);
 
-        // Copy skill
-        const result = await copyDirectory(skillPath, destPath);
-
-        if (!result.success) {
-          out.error(`Failed to push "${skillName}" to ${targetName}`, result.error);
+        if (isSame) {
+          // Skip if identical
+          totalSkipped++;
           continue;
         }
 
-        totalPushed++;
-        out.success(`Pushed "${skillName}" to ${targetName}`);
-      }
-    }
+        // Prompt if different and not forcing
+        if (!options.force) {
+          const shouldOverwrite = await confirm({
+            message: `Overwrite "${skillName}" in ${targetName}?`,
+            initialValue: false,
+          });
 
-    // Summary
-    if (totalPushed > 0 || totalSkipped > 0) {
-      console.log('');
-      console.log(out.dim(`Pushed: ${totalPushed} | Skipped: ${totalSkipped}`));
+          if (shouldOverwrite === false || typeof shouldOverwrite === 'symbol') {
+            totalSkipped++;
+            continue;
+          }
+        }
+      }
+
+      // Copy skill
+      const result = await copyDirectory(skillPath, destPath);
+
+      if (!result.success) {
+        throw new SksetError(`Failed to push "${skillName}" to ${targetName}`, result.error);
+      }
+
+      totalPushed++;
+      out.success(`Pushed "${skillName}" to ${targetName}`);
     }
-  } catch (err) {
-    out.error('Failed to push skills', (err as Error).message);
-    process.exit(1);
+  }
+
+  // Summary
+  if (totalPushed > 0 || totalSkipped > 0) {
+    console.log('');
+    console.log(out.dim(`Pushed: ${totalPushed} | Skipped: ${totalSkipped}`));
   }
 }
 
@@ -135,9 +127,7 @@ async function getSkillsToPush(
     const config = await loadConfig();
 
     if (!groupExists(config, options.group)) {
-      out.error(`Group "${options.group}" does not exist`);
-      out.info('Run "skset groups list" to see available groups');
-      process.exit(1);
+      throw new GroupNotFoundError(options.group);
     }
 
     const skills = getSkillsInGroup(config, options.group);
@@ -148,11 +138,15 @@ async function getSkillsToPush(
     }
 
     return skills;
-  } else if (options.all) {
+  }
+
+  if (options.all) {
     // Push all skills
     const skills = await listSkills(libraryPath);
     return skills.map((s) => s.name);
-  } else if (skillName) {
+  }
+
+  if (skillName) {
     // Push single skill
     const skillPath = join(libraryPath, skillName);
     const skill = await parseSkill(skillPath);

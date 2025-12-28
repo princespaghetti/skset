@@ -6,13 +6,13 @@
  * Represents a skill following the Agent Skills specification
  */
 export interface Skill {
-  /** Skill name (1-64 chars, lowercase alphanumeric + hyphens) */
+  /** Skill name (see SKILL_NAME_MIN_LENGTH and SKILL_NAME_MAX_LENGTH in constants.ts) */
   name: string;
-  /** Skill description (1-1024 chars) */
+  /** Skill description (see SKILL_DESCRIPTION_MIN_LENGTH and SKILL_DESCRIPTION_MAX_LENGTH in constants.ts) */
   description: string;
   /** Optional license identifier */
   license?: string;
-  /** Optional compatibility notes (max 500 chars) */
+  /** Optional compatibility notes (see SKILL_OPTIONAL_FIELD_MAX_LENGTH in constants.ts) */
   compatibility?: string;
   /** Optional metadata as string key-value pairs */
   metadata?: Record<string, string>;

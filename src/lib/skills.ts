@@ -7,6 +7,17 @@ import { readdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import matter from 'gray-matter';
 import type { Skill, ValidationResult } from '../types/index.ts';
+import {
+  CHARS_PER_TOKEN,
+  SKILL_DESCRIPTION_MAX_LENGTH,
+  SKILL_DESCRIPTION_MIN_LENGTH,
+  SKILL_MAX_LINES_RECOMMENDED,
+  SKILL_MAX_TOKENS_RECOMMENDED,
+  SKILL_NAME_MAX_LENGTH,
+  SKILL_NAME_MIN_LENGTH,
+  SKILL_NAME_PATTERN,
+  SKILL_OPTIONAL_FIELD_MAX_LENGTH,
+} from './constants.ts';
 
 /**
  * Parse a SKILL.md file and extract frontmatter
@@ -66,6 +77,9 @@ export async function parseSkill(
 
 /**
  * Find SKILL.md file (case-insensitive)
+ * @param dirPath - Directory path to search
+ * @returns Filename of SKILL.md (preserving original casing) or null if not found
+ * @internal
  */
 async function findSkillFile(dirPath: string): Promise<string | null> {
   if (!existsSync(dirPath)) {
@@ -93,11 +107,11 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
     errors.push('name is required');
   } else {
     // Name: 1-64 chars, lowercase alphanumeric + hyphens
-    if (skill.name.length < 1 || skill.name.length > 64) {
-      errors.push('name must be 1-64 characters');
+    if (skill.name.length < SKILL_NAME_MIN_LENGTH || skill.name.length > SKILL_NAME_MAX_LENGTH) {
+      errors.push(`name must be ${SKILL_NAME_MIN_LENGTH}-${SKILL_NAME_MAX_LENGTH} characters`);
     }
 
-    if (!/^[a-z0-9-]+$/.test(skill.name)) {
+    if (!SKILL_NAME_PATTERN.test(skill.name)) {
       errors.push('name must contain only lowercase letters, numbers, and hyphens');
     }
 
@@ -120,8 +134,11 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
   if (!skill.description) {
     errors.push('description is required');
   } else {
-    if (skill.description.length < 1 || skill.description.length > 1024) {
-      errors.push('description must be 1-1024 characters');
+    if (
+      skill.description.length < SKILL_DESCRIPTION_MIN_LENGTH ||
+      skill.description.length > SKILL_DESCRIPTION_MAX_LENGTH
+    ) {
+      errors.push(`description must be ${SKILL_DESCRIPTION_MIN_LENGTH}-${SKILL_DESCRIPTION_MAX_LENGTH} characters`);
     }
 
     if (skill.description.trim().length === 0) {
@@ -130,12 +147,12 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
   }
 
   // Validate optional fields
-  if (skill.compatibility && skill.compatibility.length > 500) {
-    errors.push('compatibility field must be 500 characters or less');
+  if (skill.compatibility && skill.compatibility.length > SKILL_OPTIONAL_FIELD_MAX_LENGTH) {
+    errors.push(`compatibility field must be ${SKILL_OPTIONAL_FIELD_MAX_LENGTH} characters or less`);
   }
 
-  if (skill.license && skill.license.length > 500) {
-    errors.push('license field must be 500 characters or less');
+  if (skill.license && skill.license.length > SKILL_OPTIONAL_FIELD_MAX_LENGTH) {
+    errors.push(`license field must be ${SKILL_OPTIONAL_FIELD_MAX_LENGTH} characters or less`);
   }
 
   // Check SKILL.md file size
@@ -147,14 +164,14 @@ export async function validateSkill(skill: Skill): Promise<ValidationResult> {
     const lineCount = lines.length;
 
     // Token estimation (rough): ~4 chars per token
-    const estimatedTokens = Math.ceil(content.length / 4);
+    const estimatedTokens = Math.ceil(content.length / CHARS_PER_TOKEN);
 
-    if (lineCount > 500) {
-      warnings.push(`SKILL.md has ${lineCount} lines (recommended: ≤500)`);
+    if (lineCount > SKILL_MAX_LINES_RECOMMENDED) {
+      warnings.push(`SKILL.md has ${lineCount} lines (recommended: ≤${SKILL_MAX_LINES_RECOMMENDED})`);
     }
 
-    if (estimatedTokens > 5000) {
-      warnings.push(`SKILL.md has ~${estimatedTokens} tokens (recommended: ≤5000)`);
+    if (estimatedTokens > SKILL_MAX_TOKENS_RECOMMENDED) {
+      warnings.push(`SKILL.md has ~${estimatedTokens} tokens (recommended: ≤${SKILL_MAX_TOKENS_RECOMMENDED})`);
     }
 
     return {

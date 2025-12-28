@@ -13,6 +13,7 @@ import {
   deleteGroup,
   getGroupNames,
   getSkillToGroupsMap,
+  validateConfig,
 } from '../../src/lib/config.ts';
 import type { Config } from '../../src/types/index.ts';
 import { homedir } from 'node:os';
@@ -284,6 +285,369 @@ describe('Group Helper Functions', () => {
       const map = getSkillToGroupsMap(config);
       expect(map.get('pdf')).toEqual(['core']);
       expect(map.get('docx')).toEqual(['core']);
+    });
+  });
+});
+
+describe('validateConfig', () => {
+  describe('Valid configurations', () => {
+    it('should pass validation for valid config', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          'claude-code': { global: '~/.claude/skills', repo: '.claude/skills' },
+        },
+        groups: {
+          core: ['pdf', 'docx'],
+        },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should pass validation for default config', () => {
+      const config = getDefaultConfig();
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should allow config with no groups', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          'claude-code': { global: '~/.claude/skills', repo: '.claude/skills' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should allow targets with only global path', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          'claude-code': { global: '~/.claude/skills' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should allow targets with only repo path', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          copilot: { repo: '.github/skills' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+  });
+
+  describe('Library validation', () => {
+    it('should error when library is missing', () => {
+      const config = {
+        targets: {},
+        groups: {},
+      } as unknown as Config;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0].field).toBe('library');
+      expect(result.errors[0].message).toContain('required');
+    });
+
+    it('should error when library is empty string', () => {
+      const config: Config = {
+        library: '',
+        targets: {},
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'library')).toBe(true);
+    });
+
+    it('should error when library is not a string', () => {
+      const config = {
+        library: 123,
+        targets: {},
+        groups: {},
+      } as unknown as Config;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'library')).toBe(true);
+    });
+
+    it('should error when library path contains null bytes', () => {
+      const config: Config = {
+        library: '~/.skset/lib\x00rary',
+        targets: {},
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'library' && e.message.includes('null'))).toBe(true);
+    });
+  });
+
+  describe('Targets validation', () => {
+    it('should error when targets is not an object', () => {
+      const config = {
+        library: '~/.skset/library',
+        targets: 'invalid',
+        groups: {},
+      } as unknown as Config;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'targets')).toBe(true);
+    });
+
+    it('should error when targets is an array', () => {
+      const config = {
+        library: '~/.skset/library',
+        targets: [],
+        groups: {},
+      } as unknown as Config;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'targets')).toBe(true);
+    });
+
+    it('should error for invalid target names', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          UPPERCASE: { global: '~/.invalid' },
+          'has spaces': { global: '~/.invalid' },
+          has_underscores: { global: '~/.invalid' },
+          '123starts-with-number': { global: '~/.invalid' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.filter((e) => e.field?.startsWith('targets.')).length).toBeGreaterThan(0);
+    });
+
+    it('should warn when target has neither global nor repo path', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          'claude-code': {} as any,
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true); // It's a warning, not an error
+      expect(
+        result.warnings.some((w) => w.field === 'targets.claude-code' && w.message.includes('no global or repo'))
+      ).toBe(true);
+    });
+
+    it('should error when target path is empty string', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          'claude-code': { global: '' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      // validatePath checks for empty/whitespace, should error
+      expect(result.errors.some((e) => e.field === 'targets.claude-code.global' && e.message.includes('empty'))).toBe(
+        true
+      );
+    });
+
+    it('should error when target path is not a string', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          'claude-code': { global: 123 as any },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'targets.claude-code.global')).toBe(true);
+    });
+
+    it('should error when target path contains null bytes', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          'claude-code': { global: '~/.claude/ski\x00lls' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'targets.claude-code.global' && e.message.includes('null'))).toBe(
+        true
+      );
+    });
+  });
+
+  describe('Groups validation', () => {
+    it('should error when groups is not an object', () => {
+      const config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: 'invalid',
+      } as unknown as Config;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'groups')).toBe(true);
+    });
+
+    it('should error when groups is an array', () => {
+      const config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: [],
+      } as unknown as Config;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'groups')).toBe(true);
+    });
+
+    it('should error for invalid group names', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: {
+          UPPERCASE: [],
+          'has spaces': [],
+          has_underscores: [],
+        },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.filter((e) => e.field?.startsWith('groups.')).length).toBeGreaterThan(0);
+    });
+
+    it('should error when group value is not an array', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: {
+          core: 'not-an-array' as any,
+        },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'groups.core')).toBe(true);
+    });
+
+    it('should error when group contains non-string skill names', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: {
+          core: [123, 'pdf'] as any,
+        },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.field === 'groups.core' && e.message.includes('non-string'))).toBe(true);
+    });
+
+    it('should allow empty skill names (validation happens at skill level)', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: {
+          core: ['', 'pdf'],
+        },
+      };
+
+      const result = validateConfig(config);
+      // Config validation doesn't check skill name validity, only that they're strings
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('Warnings', () => {
+    it('should warn about duplicate skills in same group', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: {
+          core: ['pdf', 'docx', 'pdf'],
+        },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.warnings.length).toBeGreaterThan(0);
+      expect(result.warnings.some((w) => w.field === 'groups.core' && w.message.includes('duplicate'))).toBe(true);
+    });
+
+    it('should not warn when skill appears in different groups', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {},
+        groups: {
+          core: ['pdf'],
+          work: ['pdf'],
+        },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.warnings.filter((w) => w.message.includes('duplicate')).length).toBe(0);
+    });
+  });
+
+  describe('Multiple errors', () => {
+    it('should collect multiple errors across different sections', () => {
+      const config: Config = {
+        library: '',
+        targets: {
+          'INVALID-NAME': { global: '' },
+        },
+        groups: {
+          'INVALID-GROUP': 'not-array' as any,
+        },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(2);
+      expect(result.errors.some((e) => e.field === 'library')).toBe(true);
+      expect(result.errors.some((e) => e.field?.startsWith('targets.'))).toBe(true);
+      expect(result.errors.some((e) => e.field?.startsWith('groups.'))).toBe(true);
     });
   });
 });

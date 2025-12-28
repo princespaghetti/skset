@@ -69,23 +69,16 @@ export async function copyDirectory(src: string, dest: string): Promise<CopyResu
 }
 
 /**
- * Check if two directories have the same content
- * Returns true if SKILL.md files have the same hash
+ * Check if two directories have identical content
+ * Uses recursive hashing to compare entire directory trees
+ * @param dir1 - First directory path
+ * @param dir2 - Second directory path
+ * @returns True if all files and subdirectories are identical
  */
 export async function directoriesMatch(dir1: string, dir2: string): Promise<boolean> {
-  const skillFile1 = join(dir1, 'SKILL.md');
-  const skillFile2 = join(dir2, 'SKILL.md');
-
-  const exists1 = await Bun.file(skillFile1).exists();
-  const exists2 = await Bun.file(skillFile2).exists();
-
-  if (!exists1 || !exists2) {
-    return false;
-  }
-
   try {
-    const hash1 = await getFileHash(skillFile1);
-    const hash2 = await getFileHash(skillFile2);
+    const hash1 = await hashDirectory(dir1);
+    const hash2 = await hashDirectory(dir2);
     return hash1 === hash2;
   } catch {
     return false;
@@ -93,13 +86,43 @@ export async function directoriesMatch(dir1: string, dir2: string): Promise<bool
 }
 
 /**
- * Get SHA-256 hash of a file
+ * Recursively hash all files in a directory
+ * Produces a deterministic hash based on file names and contents
+ * @param dirPath - Directory to hash
+ * @returns Hex-encoded hash of the entire directory tree
+ * @internal
  */
-async function getFileHash(filePath: string): Promise<string> {
-  const file = Bun.file(filePath);
+async function hashDirectory(dirPath: string): Promise<string> {
   const hasher = new Bun.CryptoHasher('sha256');
-  hasher.update(await file.arrayBuffer());
-  return hasher.digest('hex');
+
+  try {
+    const entries = await readdir(dirPath, { withFileTypes: true });
+
+    // Sort entries for deterministic hashing
+    const sortedEntries = entries.sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const entry of sortedEntries) {
+      const fullPath = join(dirPath, entry.name);
+
+      // Hash the entry name first (for structure)
+      hasher.update(entry.name);
+
+      if (entry.isFile()) {
+        // Hash file content
+        const fileBuffer = await Bun.file(fullPath).arrayBuffer();
+        hasher.update(new Uint8Array(fileBuffer));
+      } else if (entry.isDirectory()) {
+        // Recursively hash subdirectory
+        const subdirHash = await hashDirectory(fullPath);
+        hasher.update(subdirHash);
+      }
+    }
+
+    return hasher.digest('hex');
+  } catch (_err) {
+    // If directory doesn't exist or can't be read, return empty hash
+    return hasher.digest('hex');
+  }
 }
 
 /**

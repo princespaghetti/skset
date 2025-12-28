@@ -9,86 +9,72 @@ import { addSkillToGroup, getLibraryPath, loadConfig, saveConfig } from '../lib/
 import { copyDirectory, skillExists } from '../lib/copy.ts';
 import { parseSkill, validateSkill } from '../lib/skills.ts';
 import type { AddOptions } from '../types/index.ts';
+import { SksetError, UserCancelledError, ValidationError } from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
 
 /**
  * Add a skill to the library
  */
 export async function add(skillPath: string, options: AddOptions = {}): Promise<void> {
-  try {
-    // Resolve path
-    const sourcePath = resolve(skillPath);
+  // Resolve path
+  const sourcePath = resolve(skillPath);
 
-    if (!existsSync(sourcePath)) {
-      out.error(`Path not found: ${skillPath}`);
-      process.exit(1);
+  if (!existsSync(sourcePath)) {
+    throw new SksetError(`Path not found: ${skillPath}`);
+  }
+
+  // Parse and validate skill
+  const skill = await parseSkill(sourcePath);
+
+  if (!skill) {
+    throw new ValidationError('SKILL.md not found', 'The directory must contain a SKILL.md file');
+  }
+
+  const validation = await validateSkill(skill);
+
+  if (!validation.valid) {
+    const errorMsg = `Skill validation failed:\n${validation.errors.map((e) => `  • ${e}`).join('\n')}`;
+    throw new ValidationError(errorMsg, 'Fix these errors and try again');
+  }
+
+  // Show warnings if any
+  if (validation.warnings.length > 0) {
+    for (const warning of validation.warnings) {
+      out.warning(warning);
     }
+    console.log('');
+  }
 
-    // Parse and validate skill
-    const skill = await parseSkill(sourcePath);
+  // Check if skill already exists in library
+  const libraryPath = await getLibraryPath();
+  const destPath = join(libraryPath, skill.name);
 
-    if (!skill) {
-      out.error('SKILL.md not found', `The directory must contain a SKILL.md file`);
-      process.exit(2);
+  if (await skillExists(destPath)) {
+    const shouldOverwrite = await confirm({
+      message: `Skill "${skill.name}" already exists in library. Overwrite?`,
+      initialValue: false,
+    });
+
+    if (shouldOverwrite === false || typeof shouldOverwrite === 'symbol') {
+      throw new UserCancelledError();
     }
+  }
 
-    const validation = await validateSkill(skill);
+  // Copy skill to library
+  const result = await copyDirectory(sourcePath, destPath);
 
-    if (!validation.valid) {
-      out.error('Skill validation failed');
-      console.log('');
-      for (const error of validation.errors) {
-        console.log(out.dim(`  • ${error}`));
-      }
-      console.log('');
-      out.info('Fix these errors and try again');
-      process.exit(2);
-    }
+  if (!result.success) {
+    throw new SksetError('Failed to copy skill', result.error);
+  }
 
-    // Show warnings if any
-    if (validation.warnings.length > 0) {
-      for (const warning of validation.warnings) {
-        out.warning(warning);
-      }
-      console.log('');
-    }
+  out.success(`Added "${skill.name}" to library`);
+  out.dim(`Copied ${result.filesCopied.length} file(s)`);
 
-    // Check if skill already exists in library
-    const libraryPath = await getLibraryPath();
-    const destPath = join(libraryPath, skill.name);
-
-    if (await skillExists(destPath)) {
-      const shouldOverwrite = await confirm({
-        message: `Skill "${skill.name}" already exists in library. Overwrite?`,
-        initialValue: false,
-      });
-
-      if (!shouldOverwrite) {
-        out.info('Cancelled');
-        process.exit(0);
-      }
-    }
-
-    // Copy skill to library
-    const result = await copyDirectory(sourcePath, destPath);
-
-    if (!result.success) {
-      out.error('Failed to copy skill', result.error);
-      process.exit(1);
-    }
-
-    out.success(`Added "${skill.name}" to library`);
-    out.dim(`Copied ${result.filesCopied.length} file(s)`);
-
-    // Add to group if specified
-    if (options.group) {
-      const config = await loadConfig();
-      const updatedConfig = addSkillToGroup(config, options.group, skill.name);
-      await saveConfig(updatedConfig);
-      out.success(`Added "${skill.name}" to group "${options.group}"`);
-    }
-  } catch (err) {
-    out.error('Failed to add skill', (err as Error).message);
-    process.exit(1);
+  // Add to group if specified
+  if (options.group) {
+    const config = await loadConfig();
+    const updatedConfig = addSkillToGroup(config, options.group, skill.name);
+    await saveConfig(updatedConfig);
+    out.success(`Added "${skill.name}" to group "${options.group}"`);
   }
 }

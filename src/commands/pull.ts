@@ -9,6 +9,7 @@ import { getLibraryPath, loadConfig } from '../lib/config.ts';
 import { copyDirectory, directoriesMatch, skillExists } from '../lib/copy.ts';
 import { listSkills, parseSkill } from '../lib/skills.ts';
 import { getGlobalPaths, getRepoPaths, getTarget } from '../lib/targets.ts';
+import { ConfigError, SksetError } from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
 import { isInGitRepo } from '../utils/paths.ts';
 
@@ -23,27 +24,20 @@ interface PullOptions {
  * Pull skills from targets into library
  */
 export async function pull(skillName?: string, options: PullOptions = {}): Promise<void> {
-  try {
-    const libraryPath = await getLibraryPath();
+  const libraryPath = await getLibraryPath();
 
-    if (!existsSync(libraryPath)) {
-      out.error('Library not found', 'Run "skset init" first');
-      process.exit(1);
-    }
+  if (!existsSync(libraryPath)) {
+    throw new ConfigError('Library not found', 'Run "skset init" first');
+  }
 
-    if (options.all) {
-      // Pull all skills from target(s)
-      await pullAll(libraryPath, options);
-    } else if (skillName) {
-      // Pull specific skill
-      await pullSingle(skillName, libraryPath, options);
-    } else {
-      out.error('Please specify a skill name or use --all');
-      process.exit(1);
-    }
-  } catch (err) {
-    out.error('Failed to pull skills', (err as Error).message);
-    process.exit(1);
+  if (options.all) {
+    // Pull all skills from target(s)
+    await pullAll(libraryPath, options);
+  } else if (skillName) {
+    // Pull specific skill
+    await pullSingle(skillName, libraryPath, options);
+  } else {
+    throw new SksetError('Please specify a skill name or use --all');
   }
 }
 
@@ -55,8 +49,7 @@ async function pullSingle(skillName: string, libraryPath: string, options: PullO
   const sourcePaths = await getSourcePaths(options);
 
   if (sourcePaths.size === 0) {
-    out.error('No source targets configured');
-    process.exit(1);
+    throw new ConfigError('No source targets configured');
   }
 
   // Find the skill in any target
@@ -77,8 +70,7 @@ async function pullSingle(skillName: string, libraryPath: string, options: PullO
   }
 
   if (!foundPath) {
-    out.error(`Skill "${skillName}" not found in any target`);
-    process.exit(1);
+    throw new SksetError(`Skill "${skillName}" not found in any target`);
   }
 
   // Copy to library
@@ -111,8 +103,7 @@ async function pullSingle(skillName: string, libraryPath: string, options: PullO
   const result = await copyDirectory(foundPath, destPath);
 
   if (!result.success) {
-    out.error(`Failed to pull "${skillName}"`, result.error);
-    process.exit(1);
+    throw new SksetError(`Failed to pull "${skillName}"`, result.error);
   }
 
   out.success(`Pulled "${skillName}" from ${foundTarget}`);
@@ -125,8 +116,7 @@ async function pullAll(libraryPath: string, options: PullOptions): Promise<void>
   const sourcePaths = await getSourcePaths(options);
 
   if (sourcePaths.size === 0) {
-    out.error('No source targets configured');
-    process.exit(1);
+    throw new ConfigError('No source targets configured');
   }
 
   let totalPulled = 0;
