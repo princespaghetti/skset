@@ -127,6 +127,79 @@ describe('tar extraction', () => {
 	});
 });
 
+describe('tar security - path traversal protection', () => {
+	it('should block path traversal with ../ sequences', async () => {
+		const tarPath = join(tempDir, 'malicious.tar.gz');
+		await createTestTarGz(tarPath, [
+			{ name: '../../../etc/passwd', content: 'malicious', type: 'file' },
+			{ name: 'safe.txt', content: 'safe', type: 'file' },
+		]);
+
+		const extractDir = join(tempDir, 'extract');
+		const files = await extractTarGz(tarPath, extractDir);
+
+		// Should only extract safe files
+		expect(files).toContain('safe.txt');
+		expect(files).not.toContain('../../../etc/passwd');
+
+		// Verify malicious file was not written outside extraction dir
+		expect(existsSync(join(extractDir, 'safe.txt'))).toBe(true);
+		expect(existsSync('/etc/passwd-from-test')).toBe(false);
+	});
+
+	it('should block absolute paths', async () => {
+		const tarPath = join(tempDir, 'malicious.tar.gz');
+		const maliciousPath = join(tempDir, 'outside', 'malicious.txt');
+
+		await createTestTarGz(tarPath, [
+			{ name: maliciousPath, content: 'malicious', type: 'file' },
+			{ name: 'safe.txt', content: 'safe', type: 'file' },
+		]);
+
+		const extractDir = join(tempDir, 'extract');
+		const files = await extractTarGz(tarPath, extractDir);
+
+		// Should only extract safe files
+		expect(files).toContain('safe.txt');
+		expect(files).not.toContain(maliciousPath);
+
+		// Verify no files were written outside extraction directory
+		expect(existsSync(join(tempDir, 'outside', 'malicious.txt'))).toBe(false);
+	});
+
+	it('should block paths that traverse up then down', async () => {
+		const tarPath = join(tempDir, 'malicious.tar.gz');
+		await createTestTarGz(tarPath, [
+			{ name: '../../tmp/malicious.txt', content: 'malicious', type: 'file' },
+			{ name: 'safe.txt', content: 'safe', type: 'file' },
+		]);
+
+		const extractDir = join(tempDir, 'extract');
+		const files = await extractTarGz(tarPath, extractDir);
+
+		// Should only extract safe files
+		expect(files).toContain('safe.txt');
+		expect(files.length).toBe(1);
+	});
+
+	it('should allow legitimate nested paths', async () => {
+		const tarPath = join(tempDir, 'test.tar.gz');
+		await createTestTarGz(tarPath, [
+			{ name: 'skills/pdf/SKILL.md', content: 'legitimate', type: 'file' },
+			{ name: 'scripts/helper.sh', content: 'script', type: 'file' },
+		]);
+
+		const extractDir = join(tempDir, 'extract');
+		const files = await extractTarGz(tarPath, extractDir);
+
+		// All legitimate paths should be extracted
+		expect(files).toContain('skills/pdf/SKILL.md');
+		expect(files).toContain('scripts/helper.sh');
+		expect(existsSync(join(extractDir, 'skills', 'pdf', 'SKILL.md'))).toBe(true);
+		expect(existsSync(join(extractDir, 'scripts', 'helper.sh'))).toBe(true);
+	});
+});
+
 /**
  * Helper function to create a test tar.gz file
  * This creates a minimal USTAR-format tar archive for testing

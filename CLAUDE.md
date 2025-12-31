@@ -224,10 +224,10 @@ Read-only sources (e.g., marketplace plugins) are automatically discovered in in
 - Use ES modules (`import`/`export`), never CommonJS (`require`)
 - Prefer `const` over `let`; avoid `var`
 - Use async/await over raw Promises where possible
-- Prefer Bun-native APIs over Node.js equivalents:
+- Prefer Bun-native APIs over Node.js equivalents where full coverage exists:
   - `Bun.file(path).text()` instead of `readFile(path, 'utf-8')`
   - `Bun.write(path, data)` instead of `writeFile(path, data)`
-  - `await Bun.file(path).exists()` instead of `existsSync(path)`
+  - For filesystem operations without Bun equivalents (`mkdir`, `readdir`, `rm`, `existsSync`, etc.), use `node:fs` for consistency across the codebase
 - Use template literals for string concatenation
 - Follow Biome's linting recommendations
 - Run `bun lint` before committing

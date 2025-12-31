@@ -180,11 +180,14 @@ export function parseGitHubUrl(url: string): GitHubUrl {
   }
 
   // https://github.com/owner/repo
+  // https://github.com/owner/repo.git
   // https://github.com/owner/repo/tree/branch
   // https://github.com/owner/repo/tree/branch/path/to/skill
   const match = url.match(/github\.com\/([^/]+)\/([^/]+)(?:\/tree\/([^/]+))?(?:\/(.+))?/);
   if (match) {
-    const [, owner, repo, branch, path] = match;
+    const [, owner, rawRepo, branch, path] = match;
+    // Strip .git extension if present
+    const repo = rawRepo.replace(/\.git$/, '');
     return {
       owner,
       repo,

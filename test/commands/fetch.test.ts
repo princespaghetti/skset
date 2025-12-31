@@ -42,6 +42,16 @@ describe('parseGitHubUrl', () => {
 		});
 	});
 
+	it('should strip .git extension from repo name', () => {
+		const result = parseGitHubUrl('https://github.com/anthropics/skills.git');
+		expect(result).toEqual({
+			owner: 'anthropics',
+			repo: 'skills',
+			ref: 'main',
+			path: undefined,
+		});
+	});
+
 	it('should parse full GitHub URL with branch', () => {
 		const result = parseGitHubUrl('https://github.com/owner/repo/tree/develop');
 		expect(result).toEqual({

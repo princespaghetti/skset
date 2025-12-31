@@ -6,7 +6,7 @@
 
 import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join, normalize, resolve } from 'node:path';
 
 // USTAR format constants
 const BLOCK_SIZE = 512;
@@ -101,7 +101,21 @@ export async function extractTarGz(
       continue;
     }
 
+    // Security: Reject absolute paths immediately
+    if (isAbsolute(entry.name)) {
+      // Skip entries with absolute paths (e.g., /etc/passwd)
+      offset += Math.ceil(entry.size / BLOCK_SIZE) * BLOCK_SIZE;
+      continue;
+    }
+
     const fullPath = join(destDir, entry.name);
+
+    // Security: Validate path to prevent directory traversal attacks (Zip Slip)
+    if (!isPathSafe(fullPath, destDir)) {
+      // Skip malicious entries that try to escape the extraction directory
+      offset += Math.ceil(entry.size / BLOCK_SIZE) * BLOCK_SIZE;
+      continue;
+    }
 
     // Handle different entry types
     if (entry.type === 'directory') {
@@ -120,8 +134,8 @@ export async function extractTarGz(
       await writeFile(fullPath, fileData);
       extractedFiles.push(entry.name);
     } else if (entry.type === 'symlink') {
-      // For now, skip symlinks (could implement if needed)
-      // TODO: Handle symlinks if GitHub tarballs contain them
+      // Skip symlinks - GitHub tarballs can contain them, but they're rare in skill directories
+      // If symlink support is needed in the future, use Bun.write() with symlink option
     }
 
     // Skip to next header (file data is padded to 512-byte boundary)
@@ -244,4 +258,22 @@ function stripComponents(path: string, count: number): string {
     return ''; // All components stripped
   }
   return parts.slice(count).join('/');
+}
+
+/**
+ * Validate that a path is safe (prevents Zip Slip / path traversal attacks)
+ * Ensures the resolved path is within the destination directory
+ *
+ * @param targetPath - The path to validate
+ * @param destDir - The destination directory that should contain the path
+ * @returns true if safe, false if potentially malicious
+ */
+function isPathSafe(targetPath: string, destDir: string): boolean {
+  // Resolve both paths to absolute, normalized form
+  const resolvedTarget = resolve(normalize(targetPath));
+  const resolvedDest = resolve(normalize(destDir));
+
+  // Check if the target path is within the destination directory
+  // The target must start with the destination path + path separator
+  return resolvedTarget.startsWith(`${resolvedDest}/`) || resolvedTarget === resolvedDest;
 }
