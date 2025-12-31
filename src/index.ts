@@ -7,6 +7,7 @@
 import { Command } from 'commander';
 import pkg from '../package.json' with { type: 'json' };
 import { add } from './commands/add.ts';
+import { fetch } from './commands/fetch.ts';
 import * as groups from './commands/groups.ts';
 import { init } from './commands/init.ts';
 import { inventory } from './commands/inventory.ts';
@@ -119,6 +120,18 @@ program
   .action(
     withErrorHandling(async (skill: string | undefined, options) => {
       await pull(skill, options);
+    })
+  );
+
+// skset fetch <url>
+program
+  .command('fetch <url>')
+  .description('Fetch a skill from a remote GitHub repository')
+  .option('-g, --group <name>', 'Add fetched skill to the specified group')
+  .option('--force', 'Force overwrite without confirmation')
+  .action(
+    withErrorHandling(async (url: string, options) => {
+      await fetch(url, options);
     })
   );
 

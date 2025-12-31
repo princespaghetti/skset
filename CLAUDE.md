@@ -133,6 +133,33 @@ When pushing skills to targets:
 3. Prompt: overwrite / skip / diff (unless `--force`)
 4. `--dry-run` reports actions without executing
 
+### Remote Skill Fetching
+
+The `fetch` command downloads skills from GitHub repositories using a custom USTAR tar extractor:
+- Zero external dependencies (uses only Bun APIs)
+- Downloads from GitHub tarball API: `https://api.github.com/repos/{owner}/{repo}/tarball/{ref}`
+- Decompresses with `Bun.gunzipSync()`
+- Extracts using custom implementation in `lib/tar.ts`
+- Validates skill before adding to library
+- Supports conflict detection and group assignment
+
+Supported URL formats:
+- `gh:owner/repo/path/to/skill` - GitHub shorthand
+- `github:owner/repo/path/to/skill` - Alternate shorthand
+- `https://github.com/owner/repo` - Full URL (defaults to main branch)
+- `https://github.com/owner/repo/tree/branch` - Full URL with branch
+- `https://github.com/owner/repo/tree/branch/path` - Full URL with branch and path
+
+Implementation in `src/commands/fetch.ts`:
+1. Parse GitHub URL to extract owner, repo, ref, and path
+2. Download tarball to temp directory
+3. Extract with `strip=1` to remove GitHub's `repo-hash/` prefix
+4. Filter to specific path if provided
+5. Parse and validate skill
+6. Handle library conflicts (prompt unless `--force`)
+7. Copy to library and optionally add to group
+8. Cleanup temp files
+
 ### Default Configuration
 
 The `skset init` command creates `~/.skset/config.yaml`:
@@ -173,6 +200,7 @@ All core CRUD and distribution commands are implemented:
 - `skset inventory` - List skills across all locations (supports `--group` filter, shows group membership)
 - `skset push <skill>` - Distribute skills to targets (supports `--group`)
 - `skset pull <skill>` - Import skills from targets
+- `skset fetch <url>` - Fetch skill from remote GitHub repository (supports `--group`, `--force`)
 - `skset groups` - Manage skill groups (list, create, delete, add, remove)
 
 Read-only sources (e.g., marketplace plugins) are automatically discovered in inventory but never used as push targets.

@@ -27,7 +27,10 @@ Groups let you manage skill sets as units: `skset push --group work` deploys you
 # Initialize skset
 skset init
 
-# Create a new skill
+# Fetch a skill from GitHub
+skset fetch gh:anthropics/skills/skills/pdf --group core
+
+# Or create a new skill
 skset new my-skill
 
 # Add it to a skill set (group)
@@ -122,6 +125,28 @@ skset pull --all
 skset pull --target claude-code
 skset pull --all --from-repo
 ```
+
+### `skset fetch <url>`
+
+Fetch skills from remote GitHub repositories.
+
+```bash
+# Using GitHub shorthand
+skset fetch gh:anthropics/skills/skills/pdf
+
+# Using full GitHub URL
+skset fetch https://github.com/anthropics/skills/tree/main/skills/pdf
+
+# Add to a group and force overwrite
+skset fetch gh:anthropics/skills/skills/pdf --group core --force
+```
+
+Supported URL formats:
+- `gh:owner/repo/path/to/skill` - GitHub shorthand
+- `github:owner/repo/path/to/skill` - Alternate shorthand
+- `https://github.com/owner/repo` - Full URL (defaults to main branch)
+- `https://github.com/owner/repo/tree/branch` - Full URL with branch
+- `https://github.com/owner/repo/tree/branch/path` - Full URL with branch and path
 
 ### `skset groups`
 
