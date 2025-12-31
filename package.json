@@ -1,6 +1,6 @@
 {
   "name": "skset",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "LLM Skill Manager CLI for managing agent skills across multiple AI coding tools",
   "type": "module",
   "bin": {
