@@ -8,6 +8,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import YAML from 'yaml';
 import type { Config } from '../types/index.ts';
+import { getErrorMessage } from '../utils/errors.ts';
 import { expandHome } from '../utils/paths.ts';
 
 /**
@@ -313,7 +314,7 @@ export async function loadConfig(): Promise<Config> {
 
     return config;
   } catch (err) {
-    throw new Error(`Failed to load config file: ${(err as Error).message}`);
+    throw new Error(`Failed to load config file: ${getErrorMessage(err)}`);
   }
 }
 
@@ -333,7 +334,7 @@ export async function saveConfig(config: Config): Promise<void> {
     const content = YAML.stringify(config);
     await Bun.write(configPath, content);
   } catch (err) {
-    throw new Error(`Failed to write config file: ${(err as Error).message}`);
+    throw new Error(`Failed to write config file: ${getErrorMessage(err)}`);
   }
 }
 

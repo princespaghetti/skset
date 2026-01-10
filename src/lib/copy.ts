@@ -5,6 +5,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { mkdir, readdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+import { getErrorMessage } from '../utils/errors.ts';
 
 /**
  * Copy result information
@@ -63,7 +64,7 @@ export async function copyDirectory(src: string, dest: string): Promise<CopyResu
     return {
       success: false,
       filesCopied: [],
-      error: (err as Error).message,
+      error: getErrorMessage(err),
     };
   }
 }

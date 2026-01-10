@@ -7,6 +7,7 @@ import { readdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import matter from 'gray-matter';
 import type { Skill, ValidationResult } from '../types/index.ts';
+import { getErrorMessage } from '../utils/errors.ts';
 import {
   CHARS_PER_TOKEN,
   SKILL_DESCRIPTION_MAX_LENGTH,
@@ -71,7 +72,7 @@ export async function parseSkill(
 
     return skill;
   } catch (err) {
-    throw new Error(`Failed to parse ${skillFile}: ${(err as Error).message}`);
+    throw new Error(`Failed to parse ${skillFile}: ${getErrorMessage(err)}`);
   }
 }
 
