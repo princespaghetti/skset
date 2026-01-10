@@ -5,7 +5,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { dirname, isAbsolute, join, normalize, resolve } from 'node:path';
 
 // USTAR format constants
@@ -131,7 +131,7 @@ export async function extractTarGz(
 
       // Extract file data
       const fileData = tarData.slice(offset, offset + entry.size);
-      await writeFile(fullPath, fileData);
+      await Bun.write(fullPath, fileData);
       extractedFiles.push(entry.name);
     } else if (entry.type === 'symlink') {
       // Skip symlinks - GitHub tarballs can contain them, but they're rare in skill directories

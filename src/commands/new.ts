@@ -3,7 +3,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { text } from '@clack/prompts';
 import { getLibraryPath } from '../lib/config.ts';
@@ -128,7 +128,7 @@ Provide step-by-step instructions for the agent to follow.
 Provide examples of inputs and expected outputs.
 `;
 
-  await writeFile(join(skillPath, 'SKILL.md'), template, 'utf-8');
+  await Bun.write(join(skillPath, 'SKILL.md'), template);
 
   out.success(`Created skill "${name}"`);
   out.info('');
