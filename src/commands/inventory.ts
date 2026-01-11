@@ -10,7 +10,20 @@ import { getGlobalPaths, getRepoPaths } from '../lib/targets.ts';
 import type { InventoryOptions, Skill } from '../types/index.ts';
 import { ConfigError, GroupNotFoundError } from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
-import { expandHome, isInGitRepo } from '../utils/paths.ts';
+import { expandHome, isInGitRepo, resolveRepoPath } from '../utils/paths.ts';
+
+/**
+ * Resolve a source path - handles both home-relative (~) and repo-relative (.) paths
+ */
+function resolveSourcePath(path: string): string {
+  if (path.startsWith('~')) {
+    return expandHome(path);
+  }
+  if (path.startsWith('.')) {
+    return resolveRepoPath(path);
+  }
+  return path;
+}
 
 interface InventorySection {
   title: string;
@@ -140,15 +153,16 @@ async function inventoryText(options: InventoryOptions): Promise<void> {
       // Read-only sources (e.g., plugin directories)
       if (config.sources) {
         for (const [sourceName, sourceConfig] of Object.entries(config.sources)) {
-          const sourcePath = expandHome(sourceConfig.path);
+          const sourcePath = resolveSourcePath(sourceConfig.path);
           let sourceSkills = await listSkillsFromGlob(sourcePath, sourceName, sourceConfig.readonly);
 
           // Filter by group if specified
           sourceSkills = filterSkillsByGroup(sourceSkills, options.group, groupSkills);
 
           const readonlyLabel = sourceConfig.readonly ? ' (read-only)' : '';
+          const toolsLabel = sourceConfig.tools?.length ? ` [used by: ${sourceConfig.tools.join(', ')}]` : '';
           sections.push({
-            title: `${sourceName}${readonlyLabel} (${sourceSkills.length} skill${sourceSkills.length !== 1 ? 's' : ''})`,
+            title: `${sourceName}${readonlyLabel}${toolsLabel} (${sourceSkills.length} skill${sourceSkills.length !== 1 ? 's' : ''})`,
             path: sourcePath,
             skills: sourceSkills,
           });
@@ -257,7 +271,11 @@ async function inventoryJSON(options: InventoryOptions): Promise<void> {
       // Read-only sources (e.g., plugin directories)
       if (config.sources) {
         for (const [sourceName, sourceConfig] of Object.entries(config.sources)) {
-          let sourceSkills = await listSkillsFromGlob(expandHome(sourceConfig.path), sourceName, sourceConfig.readonly);
+          let sourceSkills = await listSkillsFromGlob(
+            resolveSourcePath(sourceConfig.path),
+            sourceName,
+            sourceConfig.readonly
+          );
 
           // Filter by group if specified
           sourceSkills = filterSkillsByGroup(sourceSkills, options.group, groupSkills);

@@ -231,19 +231,30 @@ export async function listSkills(
 }
 
 /**
- * List all skills from a glob pattern (for read-only sources like plugins)
- * @param globPattern - Glob pattern to match directories (e.g., ~/.claude/plugins/*\/*\/skills)
+ * List all skills from a path or glob pattern (for read-only sources like plugins)
+ * @param pathOrGlob - Path or glob pattern to match directories (e.g., ~/.claude/plugins/*\/*\/skills or .claude/skills)
  * @param sourceName - Name of the source (e.g., 'claude-plugins')
  * @param readonly - Whether this source is read-only
  * @returns Array of parsed skills from all matching directories
  */
-export async function listSkillsFromGlob(globPattern: string, sourceName: string, readonly: boolean): Promise<Skill[]> {
+export async function listSkillsFromGlob(pathOrGlob: string, sourceName: string, readonly: boolean): Promise<Skill[]> {
   try {
+    // Check if this is a simple path (no glob wildcards) vs a glob pattern
+    const hasGlobChars = /[*?[\]]/.test(pathOrGlob);
+
+    if (!hasGlobChars) {
+      // Simple directory path - list skills directly
+      if (existsSync(pathOrGlob)) {
+        return await listSkills(pathOrGlob, 'plugin', sourceName, readonly);
+      }
+      return [];
+    }
+
+    // Glob pattern - scan for matching directories
     const { Glob } = await import('bun');
-    const glob = new Glob(globPattern);
+    const glob = new Glob(pathOrGlob);
     const allSkills: Skill[] = [];
 
-    // Scan for matching directories
     for await (const path of glob.scan({ onlyFiles: false })) {
       if (existsSync(path)) {
         const skills = await listSkills(path, 'plugin', sourceName, readonly);

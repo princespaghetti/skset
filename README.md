@@ -183,7 +183,7 @@ Configuration is stored at `~/.skset/config.yaml` with support for 5 targets:
 - **claude-code**: `~/.claude/skills/` (global), `.claude/skills/` (repo)
 - **opencode**: `~/.opencode/skill/` (global), `.opencode/skill/` (repo)
 - **codex**: `~/.codex/skills/` (global), `.codex/skills/` (repo)
-- **copilot**: `.github/skills/` (repo only)
+- **copilot**: `~/.github/skills/` (global), `.github/skills/` (repo)
 - **amp**: `~/.config/agents/skills/` (global), `.agents/skills/` (repo)
 
 ## Skill Format

@@ -81,6 +81,7 @@ interface Source {
   name: string;
   path: string;  // Supports glob patterns (e.g., ~/.claude/plugins/*/*/skills)
   readonly: boolean;  // If true, shown in inventory but not a push target
+  tools?: string[];  // Tools that use this source (shown in inventory)
 }
 
 interface Config {
@@ -177,6 +178,7 @@ targets:
     global: ~/.codex/skills
     repo: .codex/skills
   copilot:
+    global: ~/.github/skills
     repo: .github/skills
   amp:
     global: ~/.config/agents/skills
@@ -187,9 +189,14 @@ sources:
   claude-plugins:
     path: ~/.claude/plugins/marketplaces/*/*/skills
     readonly: true
-  amp-claude-legacy:
+  claude-legacy-repo:
     path: .claude/skills
     readonly: true
+    tools: [claude-code, copilot, amp]
+  claude-legacy-global:
+    path: ~/.claude/skills
+    readonly: true
+    tools: [claude-code, copilot, amp]
 ```
 
 ## v1 Commands

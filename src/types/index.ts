@@ -76,6 +76,8 @@ export interface Source {
   path: string;
   /** Whether this source is read-only (prevents push operations) */
   readonly: boolean;
+  /** Tools that use this source location (for display in inventory) */
+  tools?: string[];
 }
 
 /**

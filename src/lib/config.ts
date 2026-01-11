@@ -69,6 +69,7 @@ export function getDefaultConfig(): Config {
         repo: '.codex/skills',
       },
       copilot: {
+        global: '~/.github/skills',
         repo: '.github/skills',
       },
       amp: {
@@ -84,9 +85,15 @@ export function getDefaultConfig(): Config {
         path: '~/.claude/plugins/marketplaces/*/*/skills',
         readonly: true,
       },
-      'amp-claude-legacy': {
+      'claude-legacy-repo': {
         path: '.claude/skills',
         readonly: true,
+        tools: ['claude-code', 'copilot', 'amp'],
+      },
+      'claude-legacy-global': {
+        path: '~/.claude/skills',
+        readonly: true,
+        tools: ['claude-code', 'copilot', 'amp'],
       },
     },
   };
