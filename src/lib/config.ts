@@ -84,6 +84,10 @@ export function getDefaultConfig(): Config {
         path: '~/.claude/plugins/marketplaces/*/*/skills',
         readonly: true,
       },
+      'amp-claude-legacy': {
+        path: '.claude/skills',
+        readonly: true,
+      },
     },
   };
 }

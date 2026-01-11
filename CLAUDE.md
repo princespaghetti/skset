@@ -187,6 +187,9 @@ sources:
   claude-plugins:
     path: ~/.claude/plugins/marketplaces/*/*/skills
     readonly: true
+  amp-claude-legacy:
+    path: .claude/skills
+    readonly: true
 ```
 
 ## v1 Commands
