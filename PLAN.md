@@ -11,7 +11,7 @@ Multiple AI coding tools now support the Agent Skills standard, but each uses di
 | Tool | Global Path | Repo Path |
 |------|-------------|-----------|
 | Claude Code | `~/.claude/skills/` | `.claude/skills/` |
-| OpenCode | `~/.opencode/skill/` | `.opencode/skill/` |
+| OpenCode | `~/.config/opencode/skill/` | `.opencode/skill/` |
 | Codex | `~/.codex/skills/`, `/etc/codex/skills/` | `.codex/skills/` |
 | VS Code Copilot | — | `.github/skills/` |
 | amp | `~/.config/agents/skills/` | `.agents/skills/` |
@@ -63,7 +63,7 @@ targets:
     repo: .claude/skills
     
   opencode:
-    global: ~/.opencode/skill
+    global: ~/.config/opencode/skill
     repo: .opencode/skill
     
   codex:

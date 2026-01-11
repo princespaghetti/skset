@@ -172,7 +172,7 @@ targets:
     global: ~/.claude/skills
     repo: .claude/skills
   opencode:
-    global: ~/.opencode/skill
+    global: ~/.config/opencode/skill
     repo: .opencode/skill
   codex:
     global: ~/.codex/skills
@@ -192,11 +192,11 @@ sources:
   claude-legacy-repo:
     path: .claude/skills
     readonly: true
-    tools: [claude-code, copilot, amp]
+    tools: [claude-code, copilot, amp, opencode]
   claude-legacy-global:
     path: ~/.claude/skills
     readonly: true
-    tools: [claude-code, copilot, amp]
+    tools: [claude-code, copilot, amp, opencode]
 ```
 
 ## v1 Commands

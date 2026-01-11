@@ -61,7 +61,7 @@ export function getDefaultConfig(): Config {
         repo: '.claude/skills',
       },
       opencode: {
-        global: '~/.opencode/skill',
+        global: '~/.config/opencode/skill',
         repo: '.opencode/skill',
       },
       codex: {
@@ -88,12 +88,12 @@ export function getDefaultConfig(): Config {
       'claude-legacy-repo': {
         path: '.claude/skills',
         readonly: true,
-        tools: ['claude-code', 'copilot', 'amp'],
+        tools: ['claude-code', 'copilot', 'amp', 'opencode'],
       },
       'claude-legacy-global': {
         path: '~/.claude/skills',
         readonly: true,
-        tools: ['claude-code', 'copilot', 'amp'],
+        tools: ['claude-code', 'copilot', 'amp', 'opencode'],
       },
     },
   };

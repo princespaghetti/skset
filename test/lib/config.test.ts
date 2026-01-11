@@ -59,7 +59,7 @@ describe('getDefaultConfig', () => {
     const config = getDefaultConfig();
 
     expect(config.targets['claude-code'].global).toBe('~/.claude/skills');
-    expect(config.targets['opencode'].global).toBe('~/.opencode/skill');
+    expect(config.targets['opencode'].global).toBe('~/.config/opencode/skill');
     expect(config.targets['codex'].global).toBe('~/.codex/skills');
     expect(config.targets['amp'].global).toBe('~/.config/agents/skills');
   });
