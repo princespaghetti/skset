@@ -3,7 +3,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { confirm } from '@clack/prompts';
@@ -11,7 +11,13 @@ import { addSkillToGroup, getLibraryPath, loadConfig, saveConfig } from '../lib/
 import { copyDirectory, skillExists } from '../lib/copy.ts';
 import { parseSkill, validateSkill } from '../lib/skills.ts';
 import { extractTarGz } from '../lib/tar.ts';
-import { SksetError, UserCancelledError, ValidationError } from '../utils/errors.ts';
+import {
+  isInteractive,
+  NonInteractiveError,
+  SksetError,
+  UserCancelledError,
+  ValidationError,
+} from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
 
 interface FetchOptions {
@@ -34,16 +40,19 @@ export async function fetch(url: string, options: FetchOptions = {}): Promise<vo
   const { owner, repo, ref, path } = parseGitHubUrl(url);
   const tarballUrl = `https://api.github.com/repos/${owner}/${repo}/tarball/${ref}`;
 
-  // 2. Setup temp directories
-  const tempTarball = join(tmpdir(), `skset-${Date.now()}.tar.gz`);
-  const tempExtract = join(tmpdir(), `skset-extract-${Date.now()}`);
+  // 2. Setup temp directories using mkdtemp for uniqueness
+  const tempDir = await mkdtemp(join(tmpdir(), 'skset-'));
+  const tempTarball = join(tempDir, 'archive.tar.gz');
+  const tempExtract = join(tempDir, 'extract');
   let properSkillDir: string | null = null;
 
   try {
     out.info(`Fetching from ${owner}/${repo}${path ? `/${path}` : ''}...`);
 
     // 3. Download tarball
-    const response = await globalThis.fetch(tarballUrl);
+    const response = await globalThis.fetch(tarballUrl, {
+      headers: { 'User-Agent': 'skset' },
+    });
     if (!response.ok) {
       if (response.status === 404) {
         throw new SksetError('Repository not found', 'Check the repository owner and name');
@@ -116,6 +125,9 @@ export async function fetch(url: string, options: FetchOptions = {}): Promise<vo
 
     if (await skillExists(destPath)) {
       if (!options.force) {
+        if (!isInteractive()) {
+          throw new NonInteractiveError();
+        }
         const shouldOverwrite = await confirm({
           message: `Skill "${skill.name}" already exists in library. Overwrite?`,
           initialValue: false,
@@ -145,11 +157,8 @@ export async function fetch(url: string, options: FetchOptions = {}): Promise<vo
     }
   } finally {
     // 12. Cleanup temp files
-    if (existsSync(tempTarball)) {
-      await rm(tempTarball, { force: true });
-    }
-    if (existsSync(tempExtract)) {
-      await rm(tempExtract, { recursive: true, force: true });
+    if (existsSync(tempDir)) {
+      await rm(tempDir, { recursive: true, force: true });
     }
     if (properSkillDir && existsSync(properSkillDir)) {
       await rm(properSkillDir, { recursive: true, force: true });

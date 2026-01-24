@@ -10,7 +10,14 @@ import { copyDirectory, directoriesMatch, skillExists } from '../lib/copy.ts';
 import { listSkills, parseSkill } from '../lib/skills.ts';
 import { resolveTargetPaths } from '../lib/targets.ts';
 import type { PushOptions } from '../types/index.ts';
-import { ConfigError, GroupNotFoundError, SkillNotFoundError, SksetError } from '../utils/errors.ts';
+import {
+  ConfigError,
+  GroupNotFoundError,
+  isInteractive,
+  NonInteractiveError,
+  SkillNotFoundError,
+  SksetError,
+} from '../utils/errors.ts';
 import * as out from '../utils/output.ts';
 
 /**
@@ -83,6 +90,9 @@ export async function push(skillName?: string, options: PushOptions = {}): Promi
 
         // Prompt if different and not forcing
         if (!options.force) {
+          if (!isInteractive()) {
+            throw new NonInteractiveError();
+          }
           const shouldOverwrite = await confirm({
             message: `Overwrite "${skillName}" in ${targetName}?`,
             initialValue: false,

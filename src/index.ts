@@ -196,4 +196,4 @@ groupsCmd
   );
 
 // Parse CLI arguments
-program.parse();
+await program.parseAsync(process.argv);

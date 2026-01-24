@@ -88,6 +88,24 @@ export class UserCancelledError extends SksetError {
 }
 
 /**
+ * Non-interactive environment error
+ * Used when confirmation is needed but stdin is not a TTY
+ */
+export class NonInteractiveError extends SksetError {
+  constructor(message = 'Cannot prompt for confirmation in non-interactive mode') {
+    super(message, 'Use --force to skip confirmation prompts', 1);
+    this.name = 'NonInteractiveError';
+  }
+}
+
+/**
+ * Check if running in an interactive terminal
+ */
+export function isInteractive(): boolean {
+  return process.stdin.isTTY === true;
+}
+
+/**
  * Handle errors in command execution
  * Prints formatted error message and exits with appropriate code
  *

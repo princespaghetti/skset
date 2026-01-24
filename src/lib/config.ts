@@ -228,8 +228,7 @@ export function validateConfig(config: Config): ConfigValidationResult {
 
   // Validate groups
   if (!config.groups) {
-    // Groups are optional, initialize empty
-    config.groups = {};
+    // Groups are optional - we'll set defaults after validation in loadConfig
   } else if (typeof config.groups !== 'object' || Array.isArray(config.groups)) {
     errors.push({
       field: 'groups',
@@ -290,10 +289,7 @@ export function validateConfig(config: Config): ConfigValidationResult {
             message: `Source "${sourceName}" missing or invalid path`,
           });
         }
-        if (sourceConfig.readonly === undefined) {
-          // Default to readonly for safety
-          sourceConfig.readonly = true;
-        }
+        // Note: readonly defaults are applied after validation in loadConfig
       }
     }
   }
@@ -343,6 +339,18 @@ export async function loadConfig(): Promise<Config> {
         }
       }
       console.warn(''); // Blank line after warnings
+    }
+
+    // Apply defaults after validation (avoid mutating during validation)
+    if (!config.groups) {
+      config.groups = {};
+    }
+    if (config.sources) {
+      for (const sourceConfig of Object.values(config.sources)) {
+        if (sourceConfig.readonly === undefined) {
+          sourceConfig.readonly = true;
+        }
+      }
     }
 
     return config;
