@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`skset` is a Bun-based CLI tool for managing LLM agent skills across multiple AI coding tools (Claude Code, OpenCode, Codex, VS Code Copilot, amp). It provides centralized skill storage and distribution following the [Agent Skills open standard](https://agentskills.io/specification).
+`skset` is a Bun-based CLI tool for managing LLM agent skills across multiple AI coding tools (Claude Code, OpenCode, Codex, VS Code Copilot, Amp, Windsurf, Cursor, Gemini CLI). It provides centralized skill storage and distribution following the [Agent Skills open standard](https://agentskills.io/specification).
 
 ## Development Commands
 
@@ -183,6 +183,15 @@ targets:
   amp:
     global: ~/.config/agents/skills
     repo: .agents/skills
+  windsurf:
+    global: ~/.codeium/windsurf/skills
+    repo: .windsurf/skills
+  cursor:
+    global: ~/.cursor/skills
+    repo: .cursor/skills
+  gemini:
+    global: ~/.gemini/skills
+    repo: .gemini/skills
 groups:
   core: []
 sources:
@@ -192,11 +201,19 @@ sources:
   claude-legacy-repo:
     path: .claude/skills
     readonly: true
-    tools: [claude-code, copilot, amp, opencode]
+    tools: [claude-code, copilot, amp, opencode, cursor]
   claude-legacy-global:
     path: ~/.claude/skills
     readonly: true
-    tools: [claude-code, copilot, amp, opencode]
+    tools: [claude-code, copilot, amp, opencode, cursor]
+  codex-legacy-repo:
+    path: .codex/skills
+    readonly: true
+    tools: [codex, cursor]
+  codex-legacy-global:
+    path: ~/.codex/skills
+    readonly: true
+    tools: [codex, cursor]
 ```
 
 ## v1 Commands

@@ -1,6 +1,6 @@
 # skset - Manage Your Skill Sets
 
-**skset** (short for "skill set") is a CLI tool for managing collections of LLM agent skills across multiple AI coding tools. Organize skills into reusable sets, maintain them in a central library, and distribute them to Claude Code, OpenCode, Codex, VS Code Copilot, and amp.
+**skset** (short for "skill set") is a CLI tool for managing collections of LLM agent skills across multiple AI coding tools. Organize skills into reusable sets, maintain them in a central library, and distribute them to Claude Code, OpenCode, Codex, VS Code Copilot, Amp, Windsurf, Cursor, and Gemini CLI.
 
 Follows the [Agent Skills open standard](https://agentskills.io/specification).
 

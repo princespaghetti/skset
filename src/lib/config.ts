@@ -76,6 +76,18 @@ export function getDefaultConfig(): Config {
         global: '~/.config/agents/skills',
         repo: '.agents/skills',
       },
+      windsurf: {
+        global: '~/.codeium/windsurf/skills',
+        repo: '.windsurf/skills',
+      },
+      cursor: {
+        global: '~/.cursor/skills',
+        repo: '.cursor/skills',
+      },
+      gemini: {
+        global: '~/.gemini/skills',
+        repo: '.gemini/skills',
+      },
     },
     groups: {
       core: [],
@@ -88,12 +100,22 @@ export function getDefaultConfig(): Config {
       'claude-legacy-repo': {
         path: '.claude/skills',
         readonly: true,
-        tools: ['claude-code', 'copilot', 'amp', 'opencode'],
+        tools: ['claude-code', 'copilot', 'amp', 'opencode', 'cursor'],
       },
       'claude-legacy-global': {
         path: '~/.claude/skills',
         readonly: true,
-        tools: ['claude-code', 'copilot', 'amp', 'opencode'],
+        tools: ['claude-code', 'copilot', 'amp', 'opencode', 'cursor'],
+      },
+      'codex-legacy-repo': {
+        path: '.codex/skills',
+        readonly: true,
+        tools: ['codex', 'cursor'],
+      },
+      'codex-legacy-global': {
+        path: '~/.codex/skills',
+        readonly: true,
+        tools: ['codex', 'cursor'],
       },
     },
   };
