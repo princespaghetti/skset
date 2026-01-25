@@ -161,6 +161,38 @@ Implementation in `src/commands/fetch.ts`:
 7. Copy to library and optionally add to group
 8. Cleanup temp files
 
+### Adding a New Tool Target
+
+When a new AI coding tool adopts the [agentskills.io](https://agentskills.io) standard, follow this checklist:
+
+**1. Research the tool's skill paths:**
+- Check official docs, GitHub README, or release announcements
+- Identify global path (e.g., `~/.toolname/skills`) and repo path (e.g., `.toolname/skills`)
+- Determine if the tool reads from legacy locations (e.g., `.claude/skills`, `.codex/skills`)
+
+**2. Update `src/lib/config.ts`:**
+- Add new target entry in `getDefaultConfig()` under `targets`:
+  ```typescript
+  'tool-name': {
+    global: '~/.toolname/skills',
+    repo: '.toolname/skills',
+  },
+  ```
+- If the tool reads from existing legacy locations, add it to the relevant `sources.*.tools` arrays
+
+**3. Update documentation:**
+- `CLAUDE.md`: Update Project Overview tool list and Default Configuration YAML example
+- `README.md`: Update supported tools list if present
+
+**4. Search for hardcoded tool lists:**
+- Run `grep -r "claude-code\|codex\|copilot" src/` to find any hardcoded tool enumerations
+- Update any CLI argument validation or display logic that lists tools
+
+**5. Verify changes:**
+- `bun run src/index.ts init` - check generated config includes new target
+- `bun run src/index.ts inventory` - verify target appears correctly
+- `bun run src/index.ts push --dry-run <skill>` - confirm new target is a destination
+
 ### Default Configuration
 
 The `skset init` command creates `~/.skset/config.yaml`:
