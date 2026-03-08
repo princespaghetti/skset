@@ -204,13 +204,13 @@ targets:
     global: ~/.claude/skills
     repo: .claude/skills
   opencode:
-    global: ~/.config/opencode/skill
-    repo: .opencode/skill
+    global: ~/.config/opencode/skills
+    repo: .opencode/skills
   codex:
-    global: ~/.codex/skills
-    repo: .codex/skills
+    global: ~/.agents/skills
+    repo: .agents/skills
   copilot:
-    global: ~/.github/skills
+    global: ~/.copilot/skills
     repo: .github/skills
   amp:
     global: ~/.config/agents/skills
@@ -233,11 +233,15 @@ sources:
   claude-legacy-repo:
     path: .claude/skills
     readonly: true
-    tools: [claude-code, copilot, amp, opencode, cursor]
+    tools: [claude-code, copilot, amp, opencode, cursor, codex]
   claude-legacy-global:
     path: ~/.claude/skills
     readonly: true
-    tools: [claude-code, copilot, amp, opencode, cursor]
+    tools: [claude-code, copilot, amp, opencode, cursor, codex]
+  amp-legacy-global:
+    path: ~/.config/amp/skills
+    readonly: true
+    tools: [amp]
   codex-legacy-repo:
     path: .codex/skills
     readonly: true

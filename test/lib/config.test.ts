@@ -59,8 +59,8 @@ describe('getDefaultConfig', () => {
     const config = getDefaultConfig();
 
     expect(config.targets['claude-code'].global).toBe('~/.claude/skills');
-    expect(config.targets['opencode'].global).toBe('~/.config/opencode/skill');
-    expect(config.targets['codex'].global).toBe('~/.codex/skills');
+    expect(config.targets['opencode'].global).toBe('~/.config/opencode/skills');
+    expect(config.targets['codex'].global).toBe('~/.agents/skills');
     expect(config.targets['amp'].global).toBe('~/.config/agents/skills');
   });
 
@@ -68,8 +68,8 @@ describe('getDefaultConfig', () => {
     const config = getDefaultConfig();
 
     expect(config.targets['claude-code'].repo).toBe('.claude/skills');
-    expect(config.targets['opencode'].repo).toBe('.opencode/skill');
-    expect(config.targets['codex'].repo).toBe('.codex/skills');
+    expect(config.targets['opencode'].repo).toBe('.opencode/skills');
+    expect(config.targets['codex'].repo).toBe('.agents/skills');
     expect(config.targets['copilot'].repo).toBe('.github/skills');
     expect(config.targets['amp'].repo).toBe('.agents/skills');
   });
@@ -354,6 +354,38 @@ describe('validateConfig', () => {
       const result = validateConfig(config);
       expect(result.valid).toBe(true);
       expect(result.errors).toEqual([]);
+    });
+
+    it('should warn when targets share the same global path', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          first: { global: '~/.shared/skills' },
+          second: { global: '~/.shared/skills' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings.some((warning) => warning.field === 'targets.global')).toBe(true);
+    });
+
+    it('should warn when targets share the same repo path', () => {
+      const config: Config = {
+        library: '~/.skset/library',
+        targets: {
+          first: { repo: '.shared/skills' },
+          second: { repo: '.shared/skills' },
+        },
+        groups: {},
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings.some((warning) => warning.field === 'targets.repo')).toBe(true);
     });
   });
 

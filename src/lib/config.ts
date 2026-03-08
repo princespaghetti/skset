@@ -61,15 +61,15 @@ export function getDefaultConfig(): Config {
         repo: '.claude/skills',
       },
       opencode: {
-        global: '~/.config/opencode/skill',
-        repo: '.opencode/skill',
+        global: '~/.config/opencode/skills',
+        repo: '.opencode/skills',
       },
       codex: {
-        global: '~/.codex/skills',
-        repo: '.codex/skills',
+        global: '~/.agents/skills',
+        repo: '.agents/skills',
       },
       copilot: {
-        global: '~/.github/skills',
+        global: '~/.copilot/skills',
         repo: '.github/skills',
       },
       amp: {
@@ -100,12 +100,17 @@ export function getDefaultConfig(): Config {
       'claude-legacy-repo': {
         path: '.claude/skills',
         readonly: true,
-        tools: ['claude-code', 'copilot', 'amp', 'opencode', 'cursor'],
+        tools: ['claude-code', 'copilot', 'amp', 'opencode', 'cursor', 'codex'],
       },
       'claude-legacy-global': {
         path: '~/.claude/skills',
         readonly: true,
-        tools: ['claude-code', 'copilot', 'amp', 'opencode', 'cursor'],
+        tools: ['claude-code', 'copilot', 'amp', 'opencode', 'cursor', 'codex'],
+      },
+      'amp-legacy-global': {
+        path: '~/.config/amp/skills',
+        readonly: true,
+        tools: ['amp'],
       },
       'codex-legacy-repo': {
         path: '.codex/skills',
@@ -164,6 +169,8 @@ function validatePath(path: string, fieldName: string, errors: ConfigValidationE
 export function validateConfig(config: Config): ConfigValidationResult {
   const errors: ConfigValidationError[] = [];
   const warnings: ConfigValidationError[] = [];
+  const sharedGlobals = new Map<string, string[]>();
+  const sharedRepos = new Map<string, string[]>();
 
   // Validate library path
   if (!config.library || typeof config.library !== 'string' || config.library.trim() === '') {
@@ -211,6 +218,9 @@ export function validateConfig(config: Config): ConfigValidationResult {
           });
         } else {
           validatePath(targetConfig.global, `targets.${targetName}.global`, errors);
+          const targets = sharedGlobals.get(targetConfig.global) ?? [];
+          targets.push(targetName);
+          sharedGlobals.set(targetConfig.global, targets);
         }
       }
       if (targetConfig.repo !== undefined) {
@@ -221,8 +231,31 @@ export function validateConfig(config: Config): ConfigValidationResult {
           });
         } else {
           validatePath(targetConfig.repo, `targets.${targetName}.repo`, errors);
+          const targets = sharedRepos.get(targetConfig.repo) ?? [];
+          targets.push(targetName);
+          sharedRepos.set(targetConfig.repo, targets);
         }
       }
+    }
+  }
+
+  for (const [path, targetNames] of sharedGlobals) {
+    if (targetNames.length > 1) {
+      warnings.push({
+        field: 'targets.global',
+        message: `Targets ${targetNames.map((name) => `"${name}"`).join(', ')} share global path "${path}"`,
+        hint: 'Overlapping paths may cause inventory and push operations to list the same directory twice',
+      });
+    }
+  }
+
+  for (const [path, targetNames] of sharedRepos) {
+    if (targetNames.length > 1) {
+      warnings.push({
+        field: 'targets.repo',
+        message: `Targets ${targetNames.map((name) => `"${name}"`).join(', ')} share repo path "${path}"`,
+        hint: 'Overlapping paths may cause inventory and push operations to list the same directory twice',
+      });
     }
   }
 

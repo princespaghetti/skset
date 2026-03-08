@@ -178,13 +178,18 @@ skset add ./my-skill --group work # Add skill and assign to group
 
 ## Configuration
 
-Configuration is stored at `~/.skset/config.yaml` with support for 5 targets:
+Configuration is stored at `~/.skset/config.yaml` with support for 8 default targets:
 
 - **claude-code**: `~/.claude/skills/` (global), `.claude/skills/` (repo)
-- **opencode**: `~/.config/opencode/skill/` (global), `.opencode/skill/` (repo)
-- **codex**: `~/.codex/skills/` (global), `.codex/skills/` (repo)
-- **copilot**: `~/.github/skills/` (global), `.github/skills/` (repo)
+- **opencode**: `~/.config/opencode/skills/` (global), `.opencode/skills/` (repo)
+- **codex**: `~/.agents/skills/` (global), `.agents/skills/` (repo)
+- **copilot**: `~/.copilot/skills/` (global), `.github/skills/` (repo)
 - **amp**: `~/.config/agents/skills/` (global), `.agents/skills/` (repo)
+- **windsurf**: `~/.codeium/windsurf/skills/` (global), `.windsurf/skills/` (repo)
+- **cursor**: `~/.cursor/skills/` (global), `.cursor/skills/` (repo)
+- **gemini**: `~/.gemini/skills/` (global), `.gemini/skills/` (repo)
+
+`skset` also tracks documented compatibility paths as read-only sources and warns when multiple targets share the same directory.
 
 ## Skill Format
 
