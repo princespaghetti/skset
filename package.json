@@ -31,7 +31,7 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.13",
+    "@biomejs/biome": "^2.5.14",
     "@types/bun": "latest"
   }
 }
